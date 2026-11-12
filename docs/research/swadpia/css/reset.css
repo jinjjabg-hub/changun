@@ -1,0 +1,107 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+:root{
+    --sub-order-width:1267px;
+
+    --floating-fixed:clamp(20px, calc(19px + 6vw), 12vw);
+
+    --over-width-floating : max(1190px, calc(((100vw - 1180px) / 2) + (1180px + var(--floating-fixed))));
+    --over-width-calc : calc(78px + max(1200px, calc(((100vw - 1180px) / 2) + (1180px + var(--floating-fixed)))));
+
+    --over-width-order-floating : max(var(--sub-order-width), calc( (100vw - 1080px) / 2 + var(--sub-order-width)));
+    --over-width-order-calc : calc(78px + max(var(--sub-order-width), calc(((100vw - var(--sub-order-width)) / 2) + (var(--sub-order-width) + var(--floating-fixed)))));
+}
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+body{
+    position: relative;
+}
+
+body.main *{
+    font-family: "Pretandard";
+}
+body.main blockquote:before,body.main blockquote:after,
+body.main q:before,body.main q:after {
+    content: '';
+    content: none;
+}
+body.main ol,body.main ul {
+    list-style: none;
+}
+body.main a{
+    color: inherit;
+    text-decoration: none;
+    text-decoration-color: inherit;
+    text-underline-offset: none;
+    height: fit-content;
+}
+body.main .en{
+    letter-spacing: normal;
+    font-size: inherit;
+    color: inherit;
+}
+
+@font-face {
+    font-family: "Pretandard";
+    src:url(/images/2025/font/Pretendard-Black.woff2) format("woff2");
+    font-weight: 900;
+}
+@font-face {
+    font-family: "Pretandard";
+    src:url(/images/2025/font/Pretendard-ExtraBold.woff2) format("woff2");
+    font-weight: 800;
+}
+@font-face {
+    font-family: "Pretandard";
+    src:url(/images/2025/font/Pretendard-Bold.woff2) format("woff2");
+    font-weight: 700;
+}
+@font-face {
+    font-family: "Pretandard";
+    src:url(/images/2025/font/Pretendard-SemiBold.woff2) format("woff2");
+    font-weight: 600;
+}
+@font-face {
+    font-family: "Pretandard";
+    src:url(/images/2025/font/Pretendard-Medium.woff2) format("woff2");
+    font-weight: 500;
+}
+@font-face {
+    font-family: "Pretandard";
+    src:url(/images/2025/font/Pretendard-Regular.woff2) format("woff2");
+    font-weight: 400;
+}
+@font-face {
+    font-family: "Pretandard";
+    src:url(/images/2025/font/Pretendard-Light.woff2) format("woff2");
+    font-weight: 300;
+}
+@font-face {
+    font-family: "Pretandard";
+    src:url(/images/2025/font/Pretendard-ExtraLight.woff2) format("woff2");
+    font-weight: 200;
+}
+@font-face {
+    font-family: "Pretandard";
+    src:url(/images/2025/font/Pretendard-Thin.woff2) format("woff2");
+    font-weight: 100;
+}
+
