@@ -38,7 +38,12 @@ export function CartView() {
           const p = getProduct(l.slug)!;
           return (
             <li key={l.id} className="flex gap-4 rounded-2xl border border-line p-4">
-              <ProductArt kind={p.art} tone={p.tone} className="hidden size-28 shrink-0 rounded-xl sm:block" />
+              {l.artwork ? (
+                // eslint-disable-next-line @next/next/no-img-element -- localStorage에 저장된 data URL 미리보기
+                <img src={l.artwork.thumb} alt="올린 그림 미리보기" className="hidden size-28 shrink-0 rounded-xl bg-surface object-contain sm:block" />
+              ) : (
+                <ProductArt kind={p.art} tone={p.tone} className="hidden size-28 shrink-0 rounded-xl sm:block" />
+              )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-extrabold">{l.productName}</p>

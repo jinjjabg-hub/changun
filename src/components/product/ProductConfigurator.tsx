@@ -23,6 +23,7 @@ import { formatShipDate, num, won } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SampleBadge } from "@/components/site/SampleBadge";
 import { ProductArt } from "@/components/site/ProductArt";
+import { CutlineTool, type Artwork } from "./CutlineTool";
 
 function Group({ step, title, hint, children }: { step: number; title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -58,6 +59,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
   const [notices, setNotices] = useState<string[]>([]);
   const now = useNow();
   const [added, setAdded] = useState(false);
+  const [artwork, setArtwork] = useState<Artwork | null>(null);
 
   const price = useMemo(() => calculate(p, sel), [p, sel]);
   const paper = p.papers.find((x) => x.id === sel.paper)!;
@@ -81,14 +83,33 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
   };
 
   const submit = (goCheckout: boolean) => {
-    addToCart(p.slug, sel);
+    addToCart(p.slug, sel, artwork ? { name: artwork.name, thumb: artwork.thumb, marginMm: artwork.marginMm } : undefined);
     if (goCheckout) router.push("/checkout");
     else setAdded(true);
+  };
+
+  const applyArtwork = (a: Artwork) => {
+    setArtwork(a);
+    setAdded(false);
+    const fid = p.cutlineFinish;
+    const f = p.finishes.find((x) => x.id === fid);
+    if (!f || sel.finishes.includes(f.id)) return setNotices([]);
+    if (!finishAvailability(p, sel, f).ok) return setNotices([`칼선을 적용했어요. 현재 옵션에서는 ‘${f.name}’을 선택할 수 없어 담당자 확인이 필요해요`]);
+    setSel(toggleFinish(p, sel, f.id).selection);
+    setNotices([`칼선을 적용하면서 ‘${f.name}’ 후가공을 함께 선택했어요`]);
   };
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
       <div>
+        {p.cutlineFinish && (
+          <CutlineTool
+            size={p.sizes.find((x) => x.id === sel.size)!}
+            applied={artwork}
+            onApply={applyArtwork}
+            onClear={() => setArtwork(null)}
+          />
+        )}
         {notices.length > 0 && (
           <div role="status" className="cw-fade-up mb-5 flex gap-2 rounded-xl border border-accent/60 bg-accent/15 p-3.5 text-sm text-[#6b4504]">
             <AlertCircle size={18} className="mt-0.5 shrink-0" />
@@ -258,6 +279,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
             </div>
             <ul className="space-y-1 text-[13px] text-mute">
               {describeSelection(p, sel).map((l) => <li key={l}>{l}</li>)}
+              {artwork && <li className="font-semibold text-brand">칼선: 자동 생성 적용 (여백 {artwork.marginMm}mm)</li>}
             </ul>
 
             <dl className="mt-4 space-y-1.5 border-t border-line pt-4 text-sm">

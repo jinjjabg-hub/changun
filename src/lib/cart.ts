@@ -13,6 +13,8 @@ export interface CartEntry {
   slug: string;
   selection: Selection;
   addedAt: string;
+  /** 칼선 자동 생성으로 올린 그림 (작은 미리보기만 저장) */
+  artwork?: { name: string; thumb: string; marginMm: number };
 }
 
 export interface CartLine extends CartEntry {
@@ -114,7 +116,10 @@ function priceEntry(e: CartEntry): CartLine | null {
     ...e,
     selection,
     productName: p.name,
-    lines: describeSelection(p, selection),
+    lines: [
+      ...describeSelection(p, selection),
+      ...(e.artwork ? [`칼선: 자동 생성 (${e.artwork.name}, 여백 ${e.artwork.marginMm}mm)`] : []),
+    ],
     total: r.total,
     leadDays: r.leadDays,
   };
@@ -138,12 +143,13 @@ export function useCartCount() {
   );
 }
 
-export function addToCart(slug: string, selection: Selection) {
+export function addToCart(slug: string, selection: Selection, artwork?: CartEntry["artwork"]) {
   const entry: CartEntry = {
     id: `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
     slug,
     selection,
     addedAt: new Date().toISOString(),
+    ...(artwork ? { artwork } : {}),
   };
   write(CART_KEY, JSON.stringify([...cartStore.snapshot(), entry]));
   return entry.id;

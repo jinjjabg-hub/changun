@@ -98,6 +98,8 @@ export interface Product {
   /** 수량이 min 이상이면 출고일 추가 */
   leadByQty?: { min: number; add: number }[];
   priceTable?: Record<string, Record<number, number>>;
+  /** 이미지 업로드 → 칼선 자동 생성 도구 사용. 값은 함께 켜질 후가공 id */
+  cutlineFinish?: string;
   /** 상세 페이지 진입 시 기본 선택 */
   defaults?: { paper?: string; size?: string; qty?: number };
   highlights: string[];
@@ -256,6 +258,7 @@ const sticker: Product = {
   setupFee: 3000,
   baseLead: 3,
   leadByQty: [{ min: 2000, add: 1 }],
+  cutlineFinish: "dmsong",
   highlights: ["원형·사각·자유 모양", "방수 소재", "화이트 인쇄"],
   notes: ["도무송 칼선은 시안 확정 후 제작됩니다.", "투명 PET는 코팅 없이도 방수·내구성이 있습니다."],
 };
