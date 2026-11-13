@@ -1,0 +1,11 @@
+:HL["/changun/_next/static/chunks/0x-cct5iun23y.css","style"]
+:HL["/changun/_next/static/chunks/1z_zj_zf7p5cl.css","style"]
+:HL["/changun/sites/swadpia/images/2025/img/quick_service.png","image"]
+:HL["/changun/sites/swadpia/images/2025/img/sec02_img01.svg","image"]
+:HL["/changun/sites/swadpia/images/2025/img/sec02_img02.svg","image"]
+:HL["/changun/sites/swadpia/images/2025/img/sec02_img03.svg","image"]
+:HL["/changun/sites/swadpia/images/2025/img/sec02_img04.svg","image"]
+:HL["/changun/sites/swadpia/images/2025/img/sec02_img05.svg","image"]
+:HL["/changun/sites/swadpia/images/2025/img/sec02_img06.svg","image"]
+:HL["/changun/sites/swadpia/images/2025/img/sec02_img07.svg","image"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"PDgwuGUmbYoToYE9XWxpS"}

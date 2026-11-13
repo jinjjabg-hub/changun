@@ -1,0 +1,11 @@
+<svg id="ico_quote" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="45" height="45" viewBox="0 0 45 45">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #e6ebf5;
+      }
+    </style>
+  </defs>
+  <circle id="Ellipse_1_copy_3" data-name="Ellipse 1 copy 3" class="cls-1" cx="22.5" cy="22.5" r="22.5"/>
+  <image id="Vector_Smart_Object" data-name="Vector Smart Object" x="12" y="13" width="21" height="20" xlink:href="data:img/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAUCAYAAABiS3YzAAAB+klEQVQ4jWJ0DMhjQAKhDAwMpQwMDNzIgiSAOwwMDFEAAAAA//9iQdMwn4GB4TwDA8M2MgxkZmBgqGJgYAgHAAAA//9CNxTkwrUMDAwTyHRpBQMDAw8AAAD//2IiUzNuwMDAAAAAAP//QncpOtjIwMCgT4TrVsB5DAwMAAAAAP//ImToLgYGhvsE1NxC4TEwMAAAAAD//yJk6FQC8piAgYEBAAAA//+ifpgyMDAAAAAA//8i5NJ5DAwMRnjk/zMwMDRAwx4CGBgYAAAAAP//ImToQwYGBiE88v8YGBjeoYgwMDAAAAAA//8iZGgjAXlMwMDAAAAAAP//on6YMjAwAAAAAP//IuTSPgJhCvJ+OwMDw264CAMDAwAAAP//IuRSRiLkUdUwMDAAAAAA//8i5NJCAvKYgIGBAQAAAP//AhkKskkeSRYU2wpE6geVTHdRRBgYGAAAAAD//wIZasbAwHACSawWiokFzgwMDPvgihkYGAAAAAD//wIZ+gvKLmBgYPjGwMDwm0jTrBgYGFIZGBjcoIaCXP2LgYHhAQAAAP//Ahn6ABqL4QwMDHugbGLAW2iOKmNgYPBhYGD4zsDAwMXAwHAWAAAA//8CGfqegYEhkIGBoYiBgSGYBG+DwD0GBgZRBgYGZQYGhmcMDAyJDAwMTwEAAAD//wMAvGYvqF/NpM4AAAAASUVORK5CYII="/>
+</svg>
