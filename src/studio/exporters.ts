@@ -117,11 +117,15 @@ export function hexToCmyk(hex: string): [number, number, number, number] {
   return [(1 - r - k) / (1 - k), (1 - g - k) / (1 - k), (1 - b - k) / (1 - k), k];
 }
 
-export async function designToPdf(design: Design, info: CardInfo, fonts: FontSet, sidesToPrint: SideKey[]): Promise<Uint8Array> {
+export async function designToPdf(design: Design, info: CardInfo, fonts: FontSet, sidesToPrint: SideKey[], paperName?: string): Promise<Uint8Array> {
   const { PDFDocument, cmyk, pushGraphicsState, popGraphicsState, rectangle, clip, endPath } = await import("pdf-lib");
   const doc = await PDFDocument.create();
   doc.setTitle(`${info.name || "명함"} 명함 ${CARD.w}×${CARD.h}mm`);
   doc.setCreator("CARD STUDIO (시연)");
+  if (paperName) {
+    doc.setSubject(`용지: ${paperName}`);
+    doc.setKeywords([`용지: ${paperName}`, `재단 ${CARD.w}x${CARD.h}mm`, `도련 ${CARD.bleed}mm`]);
+  }
 
   const B = CARD.bleed;
   const pageW = (CARD.w + (B + SLUG) * 2) * PT;

@@ -35,12 +35,13 @@ function Studio() {
   const [design, setDesign] = useState<Design | null>(saved?.design ?? null);
   const [options, setOptions] = useState<Design[]>([]);
   const [focus, setFocus] = useState<{ side: SideKey; id: string } | null>(null);
+  const [paper, setPaper] = useState<string | undefined>(saved?.paper);
 
   // 자동 저장. 이미지 때문에 용량을 넘으면 이미지를 빼고 저장한다
   useEffect(() => {
-    const v = { info, step, seed, design };
+    const v = { info, step, seed, design, paper };
     if (!save(v)) save({ ...v, info: { ...info, logo: null, photo: null } });
-  }, [info, step, seed, design]);
+  }, [info, step, seed, design, paper]);
 
   // 시안 4종 (정보나 시드가 바뀌면 다시 만든다)
   useEffect(() => {
@@ -67,6 +68,7 @@ function Studio() {
     setDesign(null);
     setOptions([]);
     setSeed(1);
+    setPaper(undefined);
     setSub(0);
     setStep(0);
   };
@@ -149,7 +151,7 @@ function Studio() {
         </div>
       )}
 
-      {step === 3 && design && <Finish design={design} info={info} fonts={fonts} onFix={(t) => { setFocus(t); setStep(2); window.scrollTo({ top: 0 }); }} />}
+      {step === 3 && design && <Finish design={design} info={info} fonts={fonts} paperId={paper} onPaper={setPaper} onFix={(t) => { setFocus(t); setStep(2); window.scrollTo({ top: 0 }); }} />}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import type { Feel, Paper } from "@/data/catalog";
  * 실제 종이 사진이 아니라 표면 무늬·광택·바탕색을 흉내 낸 것이다.
  */
 
-const DEFAULT_FEEL: Feel = { tex: "smooth", gloss: 1, tone: "#ffffff", rough: 1 };
+export const DEFAULT_FEEL: Feel = { tex: "smooth", gloss: 1, tone: "#ffffff", rough: 1 };
 
 /** 이름의 평량(g·μ)으로 두께감 1~5 */
 export function thickness(p: Paper): number {
@@ -19,12 +19,12 @@ export function thickness(p: Paper): number {
   return g < 110 ? 1 : g < 160 ? 2 : g < 240 ? 3 : g < 320 ? 4 : 5;
 }
 
-const isDark = (hex: string) => {
+export const isDark = (hex: string) => {
   const n = parseInt(hex.slice(1), 16);
   return ((n >> 16) & 255) * 0.299 + ((n >> 8) & 255) * 0.587 + (n & 255) * 0.114 < 110;
 };
 
-function Surface({ feel, id }: { feel: Feel; id: string }) {
+export function Surface({ feel, id }: { feel: Feel; id: string }) {
   const { tex, gloss, tone, rough } = feel;
   const dark = isDark(tone);
   const ink = dark ? "#ffffff" : "#000000";

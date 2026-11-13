@@ -8,14 +8,18 @@ import { preflight, summarize, type Check } from "@/studio/preflight";
 import { CARD, type CardInfo, type Design, type SideKey } from "@/studio/types";
 import { cn } from "@/lib/utils";
 import { CardSvg } from "./CardSvg";
+import { CardOnPaper, PaperPicker, PaperSummary, paperById } from "./PaperPicker";
 
 const ICON = { pass: CheckCircle2, warn: AlertTriangle, fail: XCircle } as const;
 const TONE = { pass: "text-brand", warn: "text-[#8a5a06]", fail: "text-danger" } as const;
 
-export function Finish({ design, info, fonts, onFix }: { design: Design; info: CardInfo; fonts: FontSet | null; onFix: (t: NonNullable<Check["target"]>) => void }) {
+export function Finish({ design, info, fonts, paperId, onPaper, onFix }: { design: Design; info: CardInfo; fonts: FontSet | null; paperId: string | undefined; onPaper: (id: string) => void; onFix: (t: NonNullable<Check["target"]>) => void }) {
   const [busy, setBusy] = useState<string | null>(null);
+  const [view, setView] = useState<"paper" | "trim">("paper");
+  const paper = paperById(paperId);
+  const hasBack = design.back.elements.length > 0;
   const [error, setError] = useState<string | null>(null);
-  const checks = preflight(design, info, fonts);
+  const checks = preflight(design, info, fonts, paper);
   const sum = summarize(checks);
   const blocked = sum.fail > 0 || !fonts;
   // 파일 이름은 영문·숫자만 쓴다 (브라우저와 인쇄소 시스템에서 한글 이름이 깨지는 경우가 있다)
@@ -33,7 +37,7 @@ export function Finish({ design, info, fonts, onFix }: { design: Design; info: C
       setBusy(null);
     }
   };
-  const pdf = (sides: SideKey[], suffix: string) => run(`pdf-${suffix}`, async (f) => downloadBytes(await designToPdf(design, info, f, sides), `${base}-${suffix}.pdf`));
+  const pdf = (sides: SideKey[], suffix: string) => run(`pdf-${suffix}`, async (f) => downloadBytes(await designToPdf(design, info, f, sides, paper.name), `${base}-${suffix}.pdf`));
   const svg = (side: SideKey, outline: boolean) =>
     run(`svg-${side}-${outline}`, async (f) => downloadText(await sideToSvg(design[side], info, f, outline), `${base}-${side}${outline ? "-outlined" : "-editable"}.svg`, "image/svg+xml"));
 
@@ -43,14 +47,29 @@ export function Finish({ design, info, fonts, onFix }: { design: Design; info: C
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
       <div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-extrabold">용지 고르기</h2>
+          <div className="inline-flex rounded-lg border-2 border-line bg-white p-0.5 text-sm font-bold">
+            {([["paper", "용지에 인쇄된 모습"], ["trim", "재단선 보기"]] as const).map(([v, t]) => (
+              <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)} className={cn("rounded-md px-3 py-1.5", view === v ? "bg-brand text-white" : "hover:bg-brand-soft")}>{t}</button>
+            ))}
+          </div>
+        </div>
+        <div className={cn("grid gap-4 rounded-2xl p-4 sm:grid-cols-2 sm:p-6", view === "paper" ? "bg-[#e6e8e5]" : "bg-surface")}>
           {(["front", "back"] as SideKey[]).map((k) => (
             <figure key={k}>
-              <CardSvg side={design[k]} info={info} fonts={fonts} guides className="w-full shadow-lg" />
-              <figcaption className="mt-1.5 text-center text-xs text-mute">{k === "front" ? "앞면" : "뒷면"} · 분홍 실선 재단선, 초록 점선 안전 영역</figcaption>
+              {view === "paper" ? (
+                <CardOnPaper side={design[k]} info={info} fonts={fonts} paper={paper} />
+              ) : (
+                <CardSvg side={design[k]} info={info} fonts={fonts} guides className="w-full shadow-lg" />
+              )}
+              <figcaption className="mt-1.5 text-center text-xs text-mute">{k === "front" ? "앞면" : "뒷면"}{view === "trim" && " · 분홍 실선 재단선, 초록 점선 안전 영역"}</figcaption>
             </figure>
           ))}
         </div>
+        {view === "paper" && <p className="mt-2 text-xs text-mute">※ 내 디자인을 고른 용지의 질감·색 위에 겹쳐 흉내 낸 모습이에요. 실제 인쇄 색과 질감은 실물 샘플로 확인해 주세요.</p>}
+        <div className="mt-3"><PaperSummary paper={paper} double={hasBack} /></div>
+        <div className="mt-3"><PaperPicker value={paper.id} onChange={onPaper} /></div>
 
         <h2 className="mb-2 mt-8 text-lg font-extrabold">인쇄 규격 자동 검사</h2>
         <p className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
@@ -74,7 +93,7 @@ export function Finish({ design, info, fonts, onFix }: { design: Design; info: C
       <aside className="lg:sticky lg:top-[150px] lg:self-start">
         <div className="rounded-2xl border-2 border-brand p-5">
           <p className="font-extrabold">파일 내려받기</p>
-          <p className="mt-1 text-xs text-mute">재단 {CARD.w}×{CARD.h}mm · 도련 {CARD.bleed}mm · 벡터</p>
+          <p className="mt-1 text-xs text-mute">재단 {CARD.w}×{CARD.h}mm · 도련 {CARD.bleed}mm · 벡터 · 용지 {paper.name}</p>
 
           <p className="mb-1.5 mt-4 text-xs font-bold text-mute">인쇄용 PDF (글자 윤곽선 · CMYK 값 · 재단선 표시)</p>
           <div className="grid gap-2">

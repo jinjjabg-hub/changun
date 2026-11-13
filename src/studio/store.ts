@@ -8,6 +8,8 @@ export interface Saved {
   step: number;
   seed: number;
   design: Design | null;
+  /** 인쇄할 용지 id (창운 명함 상품의 용지) */
+  paper?: string;
 }
 
 export function loadSaved(): Saved | null {

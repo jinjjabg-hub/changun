@@ -1,3 +1,4 @@
+import type { Paper } from "@/data/catalog";
 import type { FontSet } from "./fonts";
 import { boxOf, layoutText } from "./geometry";
 import { qrPath } from "./qr";
@@ -31,7 +32,7 @@ const contrast = (a: string, b: string) => {
 };
 
 /** 인쇄 전 자동 검사. 결과는 통과 / 경고 / 실패로 나눈다. */
-export function preflight(design: Design, info: CardInfo, fonts: FontSet | null): Check[] {
+export function preflight(design: Design, info: CardInfo, fonts: FontSet | null, paper?: Paper | null): Check[] {
   const out: Check[] = [];
   const S = CARD.safe;
 
@@ -89,6 +90,29 @@ export function preflight(design: Design, info: CardInfo, fonts: FontSet | null)
       }
     }
     if (visible === 0) out.push({ id: `empty-${key}`, level: "warn", title: `${name}이 비어 있음`, detail: `${name}에 보이는 내용이 없어요. 단면 명함이라면 무시해도 됩니다.` });
+  }
+
+  if (paper) {
+    const tex = paper.feel?.tex;
+    const tone = paper.feel?.tone ?? "#ffffff";
+    // 디자인에 쓰인 밝은 색 (흰색·아주 밝은 색)
+    const colors = (["front", "back"] as SideKey[]).flatMap((k) => [design[k].bg, ...design[k].elements.flatMap((e) => ("color" in e ? [e.color] : "fill" in e ? [e.fill] : "stroke" in e && e.stroke ? [e.stroke] : []))]);
+    const light = colors.filter((c) => /^#[0-9a-f]{6}$/i.test(c) && luminance(c) > 0.75);
+    if (luminance(tone) < 0.1) {
+      out.push({ id: "paper-dark", level: "fail", title: `${paper.name}: 화이트 인쇄 전용`, detail: "검은 종이에는 일반 색 잉크가 거의 보이지 않아요. 이 디자인은 지금 색 그대로 인쇄할 수 없으니 다른 용지를 고르거나, 화이트 인쇄 전용 디자인을 따로 문의해 주세요." });
+    } else if (tex === "kraft") {
+      if (light.length) out.push({ id: "paper-kraft", level: "warn", title: `${paper.name}: 흰색·밝은 색이 표현 안 됨`, detail: `갈색 종이라 흰색과 밝은 색(${Array.from(new Set(light)).slice(0, 3).join(", ")})은 종이색으로 나와요. 어두운 색 위주로 바꾸는 것을 권장해요.` });
+      else out.push({ id: "paper-kraft", level: "pass", title: `${paper.name}`, detail: "어두운 색 위주의 디자인이라 갈색 종이에서도 잘 보여요." });
+    } else if (tex === "pearl" || tex === "metal") {
+      out.push({ id: "paper-pearl", level: "warn", title: `${paper.name}: 펄 용지`, detail: "펄 때문에 색이 화면보다 살짝 뿌옇고 반짝이게 나와요. 작은 글씨는 굵게 쓰는 편이 좋아요." });
+    } else if (paper.feel && paper.feel.rough >= 2) {
+      const tiny = (["front", "back"] as SideKey[]).some((k) => design[k].elements.some((e) => e.type === "text" && e.weight === 300 && e.size < 7));
+      out.push(tiny
+        ? { id: "paper-rough", level: "warn", title: `${paper.name}: 결이 있는 용지`, detail: "종이 결 때문에 가늘고 작은 글자는 끊겨 보일 수 있어요. 7pt 미만의 가는 글자는 굵기를 올려 주세요." }
+        : { id: "paper-rough", level: "pass", title: `${paper.name}`, detail: "결이 있는 용지지만 가늘고 작은 글자가 없어 괜찮아요." });
+    } else {
+      out.push({ id: "paper", level: "pass", title: `${paper.name}`, detail: "이 디자인에 무리 없는 용지예요." });
+    }
   }
 
   out.push({ id: "text-outline", level: "pass", title: "글꼴", detail: "PDF의 글자는 모두 윤곽선(벡터 도형)으로 바뀌어 글꼴 누락이 생기지 않습니다" });
