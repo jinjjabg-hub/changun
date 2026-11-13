@@ -2,7 +2,9 @@
 // Out-of-scope destinations keep pointing at the source site via `src()`.
 
 export const SOURCE_ORIGIN = "https://www.swadpia.co.kr";
-export const ASSET = "/sites/swadpia";
+/** Sub-path the site is hosted under (empty at the domain root). */
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+export const ASSET = `${BASE_PATH}/sites/swadpia`;
 
 /** Prefix a source-relative pathname with the source origin. */
 export function src(path: string): string {
