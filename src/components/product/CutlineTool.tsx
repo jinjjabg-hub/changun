@@ -1,21 +1,24 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, Download, ImagePlus, Scissors, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, FileDown, ImagePlus, Scissors, X } from "lucide-react";
 import type { Size } from "@/data/catalog";
 import { fitToSize, makeCutline, subjectMask, toSvgPath, type Pixels } from "@/lib/cutline";
+import { buildStickerPdf, downloadBytes } from "@/lib/printPdf";
 import { cn } from "@/lib/utils";
 
 export interface Artwork {
   name: string;
   /** 장바구니 미리보기용 작은 PNG (data URL) */
   thumb: string;
-  marginMm: number;
-  dpi: number;
+  /** 장바구니·견적 패널에 보여줄 한 줄 설명 */
+  label: string;
 }
 
 interface Source {
   name: string;
+  /** 원본 이미지 (data URL) */
+  url: string;
   /** 처리용으로 줄인 픽셀 */
   px: Pixels;
   /** 원본 대비 처리 해상도 비율 */
@@ -75,7 +78,7 @@ async function toSource(url: string, name: string): Promise<Source> {
   const ctx = c.getContext("2d", { willReadFrequently: true })!;
   ctx.drawImage(im, 0, 0, w, h);
   const id = ctx.getImageData(0, 0, w, h);
-  return { name, px: { width: w, height: h, data: id.data }, scale, natW, natH };
+  return { name, url, px: { width: w, height: h, data: id.data }, scale, natW, natH };
 }
 
 /** 배경을 투명하게 지운 그림 (미리보기용) */
@@ -92,6 +95,35 @@ function cutoutUrl(px: Pixels, tolerance: number) {
   }
   ctx.putImageData(id, 0, 0);
   return c.toDataURL("image/png");
+}
+
+/** 원본 해상도로 배경을 지운 PNG (인쇄용 PDF에 넣는다). 처리용 마스크를 부드럽게 키워서 적용한다. */
+async function fullCutout(src: Source, tolerance: number) {
+  const im = await loadImage(src.url);
+  const cap = Math.min(1, 3000 / Math.max(src.natW, src.natH));
+  const w = Math.round(src.natW * cap);
+  const h = Math.round(src.natH * cap);
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d")!;
+  ctx.drawImage(im, 0, 0, w, h);
+  const sm = subjectMask(src.px, tolerance);
+  if (!("fail" in sm) && sm.mode === "color") {
+    const m = document.createElement("canvas");
+    m.width = src.px.width;
+    m.height = src.px.height;
+    const mctx = m.getContext("2d")!;
+    const id = mctx.createImageData(m.width, m.height);
+    for (let i = 0; i < sm.mask.length; i++) id.data[i * 4 + 3] = sm.mask[i] ? 255 : 0;
+    mctx.putImageData(id, 0, 0);
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(m, 0, 0, w, h);
+  }
+  const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/png"));
+  if (!blob) throw new Error("encode");
+  return { bytes: new Uint8Array(await blob.arrayBuffer()), mime: "image/png" as const, width: w, height: h };
 }
 
 const FAIL_TEXT = {
@@ -176,7 +208,27 @@ export function CutlineTool({ size, applied, onApply, onClear }: { size: Size; a
     ctx.fill();
     ctx.shadowColor = "transparent";
     ctx.drawImage(await loadImage(ok.cutout), 0, 0, src.px.width, src.px.height);
-    onApply({ name: src.name, thumb: c.toDataURL("image/png"), marginMm, dpi });
+    onApply({ name: src.name, thumb: c.toDataURL("image/png"), label: `칼선: 자동 생성 (${src.name}, 여백 ${marginMm}mm)` });
+  };
+
+  const [busy, setBusy] = useState(false);
+  const downloadPdf = async () => {
+    if (!ok || !src) return;
+    setBusy(true);
+    try {
+      const bytes = await buildStickerPdf({
+        image: await fullCutout(src, tolerance),
+        frame: { w: src.px.width, h: src.px.height },
+        points: ok.res.points,
+        mmPerUnit: ok.mmPerPx,
+        title: `${src.name} · ${size.name} 스티커`,
+      });
+      downloadBytes(bytes, `${src.name.replace(/\.[^.]+$/, "")}-print.pdf`);
+    } catch {
+      setError("PDF를 만들지 못했어요. 다른 이미지로 다시 시도해 주세요.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const download = () => {
@@ -281,11 +333,14 @@ export function CutlineTool({ size, applied, onApply, onClear }: { size: Size; a
               <button type="button" disabled={!ok} onClick={apply} className={cn("h-10 rounded-lg px-4 text-sm font-bold text-white", applied ? "bg-brand-dark" : "bg-brand hover:bg-brand-dark", "disabled:bg-mute/40")}>
                 {applied ? "✓ 칼선 적용됨" : "이 칼선으로 주문에 적용"}
               </button>
+              <button type="button" disabled={!ok || busy} onClick={downloadPdf} className="flex h-10 items-center gap-1.5 rounded-lg border-2 border-brand bg-white px-3 text-sm font-bold text-brand hover:bg-brand-soft disabled:opacity-50">
+                <FileDown size={15} /> {busy ? "만드는 중…" : "인쇄용 PDF"}
+              </button>
               <button type="button" disabled={!ok} onClick={download} className="flex h-10 items-center gap-1.5 rounded-lg border-2 border-line bg-white px-3 text-sm font-semibold hover:border-brand/50 disabled:opacity-50">
                 <Download size={15} /> 칼선 SVG
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-mute">※ 시연용 자동 칼선입니다. 실제 제작 시에는 담당자가 칼선을 한 번 더 확인합니다.</p>
+            <p className="mt-2 text-[11px] text-mute">※ 인쇄용 PDF는 실제 크기(mm)이며 1쪽은 그림+칼선, 2쪽은 칼선만 들어 있어요. 색상은 RGB 그대로입니다. 시연용 자동 칼선이라 실제 제작 시에는 담당자가 한 번 더 확인합니다.</p>
           </div>
         </div>
       )}

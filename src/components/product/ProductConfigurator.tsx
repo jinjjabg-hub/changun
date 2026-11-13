@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { SampleBadge } from "@/components/site/SampleBadge";
 import { ProductArt } from "@/components/site/ProductArt";
 import { CutlineTool, type Artwork } from "./CutlineTool";
+import { PrintFileTool } from "./PrintFileTool";
 
 function Group({ step, title, hint, children }: { step: number; title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -83,7 +84,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
   };
 
   const submit = (goCheckout: boolean) => {
-    addToCart(p.slug, sel, artwork ? { name: artwork.name, thumb: artwork.thumb, marginMm: artwork.marginMm } : undefined);
+    addToCart(p.slug, sel, artwork ?? undefined);
     if (goCheckout) router.push("/checkout");
     else setAdded(true);
   };
@@ -102,6 +103,18 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
       <div>
+        {p.printFile && (
+          <PrintFileTool
+            size={p.sizes.find((x) => x.id === sel.size)!}
+            double={sel.side === "double"}
+            bleedMm={p.printFile.bleedMm}
+            safeMm={p.printFile.safeMm}
+            productName={p.name}
+            applied={artwork}
+            onApply={(a) => { setArtwork(a); setAdded(false); }}
+            onClear={() => setArtwork(null)}
+          />
+        )}
         {p.cutlineFinish && (
           <CutlineTool
             size={p.sizes.find((x) => x.id === sel.size)!}
@@ -279,7 +292,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
             </div>
             <ul className="space-y-1 text-[13px] text-mute">
               {describeSelection(p, sel).map((l) => <li key={l}>{l}</li>)}
-              {artwork && <li className="font-semibold text-brand">칼선: 자동 생성 적용 (여백 {artwork.marginMm}mm)</li>}
+              {artwork && <li className="font-semibold text-brand">{artwork.label}</li>}
             </ul>
 
             <dl className="mt-4 space-y-1.5 border-t border-line pt-4 text-sm">

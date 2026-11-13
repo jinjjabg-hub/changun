@@ -13,8 +13,8 @@ export interface CartEntry {
   slug: string;
   selection: Selection;
   addedAt: string;
-  /** 칼선 자동 생성으로 올린 그림 (작은 미리보기만 저장) */
-  artwork?: { name: string; thumb: string; marginMm: number };
+  /** 올린 그림 (작은 미리보기와 설명만 저장, 원본은 저장하지 않음) */
+  artwork?: { name: string; thumb: string; label: string };
 }
 
 export interface CartLine extends CartEntry {
@@ -118,7 +118,7 @@ function priceEntry(e: CartEntry): CartLine | null {
     productName: p.name,
     lines: [
       ...describeSelection(p, selection),
-      ...(e.artwork ? [`칼선: 자동 생성 (${e.artwork.name}, 여백 ${e.artwork.marginMm}mm)`] : []),
+      ...(e.artwork?.label ? [e.artwork.label] : []),
     ],
     total: r.total,
     leadDays: r.leadDays,

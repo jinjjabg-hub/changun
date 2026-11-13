@@ -100,6 +100,8 @@ export interface Product {
   priceTable?: Record<string, Record<number, number>>;
   /** 이미지 업로드 → 칼선 자동 생성 도구 사용. 값은 함께 켜질 후가공 id */
   cutlineFinish?: string;
+  /** 이미지 업로드 → 인쇄용 PDF 내보내기 도구 사용 (도련·안전 영역, mm) */
+  printFile?: { bleedMm: number; safeMm: number };
   /** 상세 페이지 진입 시 기본 선택 */
   defaults?: { paper?: string; size?: string; qty?: number };
   highlights: string[];
@@ -184,6 +186,7 @@ const businessCard: Product = {
   setupFee: 0,
   baseLead: 2,
   leadByQty: [{ min: 1000, add: 1 }],
+  printFile: { bleedMm: 3, safeMm: 3 },
   defaults: { qty: 200 },
   highlights: ["4종 용지", "후가공 7종", "최소 100매부터"],
   notes: ["건수(디자인 종류)는 같은 사양으로 내용만 다른 명함 수입니다.", "박·형압은 시안 확인 후 제작에 들어갑니다."],
