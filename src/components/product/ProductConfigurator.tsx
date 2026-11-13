@@ -4,18 +4,24 @@ import { useMemo, useState } from "react";
 import { useNow } from "@/hooks/useNow";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, Check, CalendarClock, ShoppingCart } from "lucide-react";
-import type { Product } from "@/data/catalog";
+import { AlertCircle, Check, CalendarClock, ChevronDown, ShoppingCart } from "lucide-react";
+import type { DesignMenu, DesignOption, Product } from "@/data/catalog";
 import {
+  CUSTOM_SIZE,
   allowedSides,
   allowedSizes,
   calculate,
   defaultSelection,
   describeSelection,
+  emptyDesign,
+  isDouble,
+  sizeOf,
   finishAvailability,
   normalize,
   shipDate,
   toggleFinish,
+  type DesignRow,
+  type DesignSelection,
   type Selection,
 } from "@/lib/pricing";
 import { addToCart } from "@/lib/cart";
@@ -39,6 +45,97 @@ function Group({ step, title, hint, children }: { step: number; title: string; h
   );
 }
 
+function CustomSizeInput({ value, range, bleed, onCommit }: { value: { w: number; h: number }; range: NonNullable<Product["customSize"]>; bleed: number; onCommit: (c: { w: number; h: number }) => void }) {
+  // 입력 중에는 범위 보정을 하지 않고, 칸을 벗어나거나 Enter 를 누를 때 반영한다
+  const [w, setW] = useState(String(value.w));
+  const [h, setH] = useState(String(value.h));
+  const commit = () => {
+    // 보정된 값을 입력칸에도 바로 반영한다 (칸을 다시 만들지 않으므로 Tab 이동 시 포커스가 유지된다)
+    const fit = (v: string, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(Number(v)) || lo));
+    const next = { w: fit(w, range.minW, range.maxW), h: fit(h, range.minH, range.maxH) };
+    setW(String(next.w));
+    setH(String(next.h));
+    if (next.w !== value.w || next.h !== value.h) onCommit(next);
+  };
+  const field = "h-10 w-20 rounded-lg border-2 border-line bg-white px-2 text-center text-sm outline-none focus:border-brand";
+  return (
+    <div className="mt-3 rounded-xl bg-surface p-3 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-1.5">가로 <input className={field} inputMode="numeric" value={w} onChange={(e) => setW(e.target.value.replace(/\D/g, ""))} onBlur={commit} onKeyDown={(e) => e.key === "Enter" && commit()} aria-label="가로(mm)" /> mm</label>
+        <span className="text-mute">×</span>
+        <label className="flex items-center gap-1.5">세로 <input className={field} inputMode="numeric" value={h} onChange={(e) => setH(e.target.value.replace(/\D/g, ""))} onBlur={commit} onKeyDown={(e) => e.key === "Enter" && commit()} aria-label="세로(mm)" /> mm</label>
+      </div>
+      <p className="mt-2 text-xs text-mute">
+        가로 {range.minW}~{range.maxW}mm, 세로 {range.minH}~{range.maxH}mm · 범위를 벗어나면 가장 가까운 값으로 맞춰져요
+        {bleed > 0 && <> · 작업 사이즈 {value.w + bleed * 2}×{value.h + bleed * 2}mm (재단 여백 포함)</>}
+        {" "}· 비규격 재단 할증 +{Math.round((range.surcharge - 1) * 100)}%
+      </p>
+    </div>
+  );
+}
+
+const QTY = Array.from({ length: 10 }, (_, i) => i + 1);
+const selectCls = "h-9 rounded-lg border-2 border-line bg-white px-2 text-sm outline-none focus:border-brand disabled:bg-surface disabled:text-mute/60";
+
+/** 종류 선택 × 건수 = 금액 한 묶음 */
+function DesignPick({ label, options, id, qty, onChange, allowNone }: { label: string; options: DesignOption[]; id: string; qty: number; onChange: (id: string, qty: number) => void; allowNone: boolean }) {
+  const o = options.find((x) => x.id === id);
+  return (
+    <div className="flex items-center gap-1.5">
+      <select aria-label={label} className={cn(selectCls, "min-w-0 flex-1")} value={id} onChange={(e) => onChange(e.target.value, e.target.value ? Math.max(1, qty) : 0)}>
+        {allowNone && <option value="">선택안함</option>}
+        {options.map((x) => <option key={x.id} value={x.id}>{x.name} ({won(x.price)})</option>)}
+      </select>
+      <span className="text-mute">×</span>
+      <select aria-label={`${label} 건수`} className={selectCls} value={o ? qty : 0} disabled={!o} onChange={(e) => onChange(id, Number(e.target.value))}>
+        {!o && <option value={0}>0</option>}
+        {QTY.map((n) => <option key={n} value={n}>{n}</option>)}
+      </select>
+      <span className="text-mute">건</span>
+      <span className="w-[66px] shrink-0 text-right font-bold tabular-nums">{won(o ? o.price * qty : 0)}</span>
+    </div>
+  );
+}
+
+function DesignPanel({ menu, value, double, initial, onChange }: { menu: DesignMenu; value: DesignSelection | null; double: boolean; initial: DesignSelection; onChange: (d: DesignSelection | null) => void }) {
+  if (!value) {
+    return (
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => onChange(initial)} className="h-10 rounded-lg border-2 border-brand bg-white px-4 text-sm font-bold text-brand hover:bg-brand-soft">+ 디자인 의뢰하기</button>
+        <span className="text-xs text-mute">담당 디자이너가 시안을 만들어 드려요 · {menu.types[0].name} {won(menu.types[0].price)}부터 (샘플 가격)</span>
+      </div>
+    );
+  }
+  const row = (key: "front" | "back", title: string, allowNone: boolean) => {
+    const r: DesignRow = value[key];
+    const set = (patch: Partial<DesignRow>) => onChange({ ...value, [key]: { ...r, ...patch } });
+    return (
+      <div className="grid gap-x-4 gap-y-2 border-t border-line py-3 text-sm md:grid-cols-[44px_minmax(0,1fr)_minmax(0,1fr)] [&>*]:min-w-0">
+        <span className="pt-1.5 font-bold text-brand">{title}</span>
+        <DesignPick label={`${title} 디자인`} options={menu.types} id={r.type} qty={r.qty} allowNone={allowNone} onChange={(type, qty) => set({ type, qty })} />
+        <div className="flex items-center gap-1.5">
+          <span className="shrink-0 text-xs font-semibold text-mute">추가편집</span>
+          <div className="min-w-0 flex-1"><DesignPick label={`${title} 추가편집`} options={menu.edits} id={r.edit} qty={r.editQty} allowNone onChange={(edit, editQty) => set({ edit, editQty })} /></div>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div>
+      <div className="mb-2 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => onChange(null)} className="h-9 rounded-lg border-2 border-danger/50 bg-white px-3 text-sm font-bold text-danger hover:bg-danger/5">− 디자인 신청 취소</button>
+        <span className="text-xs text-mute">시안 확인 후 인쇄에 들어가요 · 출고일 +{menu.leadDays}일 (영업일)</span>
+      </div>
+      {row("front", "전면", false)}
+      {double ? row("back", "후면", true) : <p className="border-t border-line py-3 text-xs text-mute">후면 디자인은 양면 인쇄를 선택하면 추가할 수 있어요.</p>}
+      <div className="grid gap-x-4 gap-y-2 border-t border-line py-3 text-sm md:grid-cols-[44px_minmax(0,1fr)_minmax(0,1fr)] [&>*]:min-w-0">
+        <span className="pt-1.5 font-bold text-brand">옵션</span>
+        <DesignPick label="디자인 옵션" options={menu.extras} id={value.extra} qty={value.extraQty} allowNone onChange={(extra, extraQty) => onChange({ ...value, extra, extraQty })} />
+      </div>
+    </div>
+  );
+}
+
 function initialSelection(p: Product, sp: URLSearchParams): Selection {
   const base = defaultSelection(p);
   const qty = Number(sp.get("qty"));
@@ -46,8 +143,12 @@ function initialSelection(p: Product, sp: URLSearchParams): Selection {
   return normalize(p, {
     ...base,
     paper: sp.get("paper") ?? base.paper,
-    size: sp.get("size") ?? base.size,
+    size: sp.get("custom") ? CUSTOM_SIZE : (sp.get("size") ?? base.size),
     side: sp.get("side") ?? base.side,
+    custom: (() => {
+      const m = /^(\d+)x(\d+)$/.exec(sp.get("custom") ?? "");
+      return m ? { w: Number(m[1]), h: Number(m[2]) } : null;
+    })(),
     qty: qty > 0 ? qty : base.qty,
     finishes: fin ? fin.split(",").filter(Boolean) : [],
   }).selection;
@@ -61,9 +162,11 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
   const now = useNow();
   const [added, setAdded] = useState(false);
   const [artwork, setArtwork] = useState<Artwork | null>(null);
+  const [allPapers, setAllPapers] = useState(false);
 
   const price = useMemo(() => calculate(p, sel), [p, sel]);
   const paper = p.papers.find((x) => x.id === sel.paper)!;
+  const size = sizeOf(p, sel);
   const sizeOk = allowedSizes(p, sel.paper);
   const sideOk = allowedSides(p, sel.paper);
   const ship = now ? shipDate(now, price.leadDays) : null;
@@ -105,8 +208,8 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
       <div>
         {p.printFile && (
           <PrintFileTool
-            size={p.sizes.find((x) => x.id === sel.size)!}
-            double={sel.side === "double"}
+            size={size}
+            double={isDouble(p, sel)}
             bleedMm={p.printFile.bleedMm}
             safeMm={p.printFile.safeMm}
             productName={p.name}
@@ -117,7 +220,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
         )}
         {p.cutlineFinish && (
           <CutlineTool
-            size={p.sizes.find((x) => x.id === sel.size)!}
+            size={size}
             applied={artwork}
             onApply={applyArtwork}
             onClear={() => setArtwork(null)}
@@ -131,8 +234,8 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
         )}
 
         <Group step={1} title={p.paperLabel} hint="선택에 따라 가능한 사이즈·후가공이 달라져요">
-          <div className="grid gap-2 sm:grid-cols-2">
-            {p.papers.map((x) => {
+          {(() => {
+            const card = (x: Product["papers"][number], compact: boolean) => {
               const on = x.id === sel.paper;
               return (
                 <button
@@ -140,11 +243,11 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
                   type="button"
                   aria-pressed={on}
                   onClick={() => change({ paper: x.id })}
-                  className={cn("rounded-xl border-2 p-3.5 text-left transition-colors", on ? "border-brand bg-brand-soft" : "border-line hover:border-brand/50")}
+                  className={cn("rounded-xl border-2 text-left transition-colors", compact ? "p-2.5" : "p-3.5", on ? "border-brand bg-brand-soft" : "border-line hover:border-brand/50")}
                 >
-                  <span className="flex items-center justify-between">
-                    <span className="font-bold">{x.name}</span>
-                    {on && <Check size={16} className="text-brand" />}
+                  <span className="flex items-center justify-between gap-2">
+                    <span className={cn("font-bold", compact && "text-sm")}>{x.name}</span>
+                    {on && <Check size={16} className="shrink-0 text-brand" />}
                   </span>
                   <span className="mt-0.5 block text-xs text-mute">{x.desc}</span>
                   <span className="mt-1.5 flex flex-wrap gap-1 text-[11px] text-mute">
@@ -154,8 +257,35 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
                   </span>
                 </button>
               );
-            })}
-          </div>
+            };
+            // 용지가 적으면 전부 펼치고, 많으면 추천만 먼저 보여준 뒤 분류별 전체 목록을 펼친다
+            if (p.papers.length <= 6) return <div className="grid gap-2 sm:grid-cols-2">{p.papers.map((x) => card(x, false))}</div>;
+            const groups = Array.from(new Set(p.papers.map((x) => x.group ?? "기타")));
+            const short = p.papers.filter((x) => x.recommended || x.id === sel.paper);
+            return (
+              <>
+                {allPapers ? (
+                  <div className="space-y-4">
+                    {groups.map((g) => (
+                      <div key={g}>
+                        <p className="mb-1.5 text-xs font-bold text-mute">{g}</p>
+                        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{p.papers.filter((x) => (x.group ?? "기타") === g).map((x) => card(x, true))}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <p className="mb-1.5 text-xs font-bold text-mute">많이 찾는 {p.paperLabel}</p>
+                    <div className="grid gap-2 sm:grid-cols-2">{short.map((x) => card(x, false))}</div>
+                  </>
+                )}
+                <button type="button" aria-expanded={allPapers} onClick={() => setAllPapers((v) => !v)} className="mt-3 flex h-10 w-full items-center justify-center gap-1 rounded-lg border-2 border-line text-sm font-bold text-brand hover:border-brand/50">
+                  {allPapers ? `추천 ${p.paperLabel}만 보기` : `전체 ${p.paperLabel} ${p.papers.length}종 보기`}
+                  <ChevronDown size={16} className={cn("transition-transform", allPapers && "rotate-180")} />
+                </button>
+              </>
+            );
+          })()}
         </Group>
 
         <Group step={2} title="사이즈">
@@ -178,17 +308,32 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
                   )}
                 >
                   {s.name}
+                  {p.customSize && <span className="block text-[11px] font-normal text-mute no-underline">{s.w}×{s.h}mm</span>}
                   {!ok && <span className="block text-[11px] no-underline">이 {p.paperLabel}에서 불가</span>}
                 </button>
               );
             })}
+            {p.customSize && (
+              <button
+                type="button"
+                aria-pressed={sel.size === CUSTOM_SIZE}
+                onClick={() => change({ size: CUSTOM_SIZE, custom: sel.custom ?? { w: size.w, h: size.h } })}
+                className={cn("rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-colors hover:border-brand/50", sel.size === CUSTOM_SIZE ? "border-brand bg-brand-soft font-bold" : "border-line")}
+              >
+                직접 입력
+                <span className="block text-[11px] font-normal text-mute">원하는 크기(mm)</span>
+              </button>
+            )}
           </div>
+          {p.customSize && sel.size === CUSTOM_SIZE && sel.custom && (
+            <CustomSizeInput value={sel.custom} range={p.customSize} bleed={p.printFile?.bleedMm ?? 0} onCommit={(c) => change({ custom: c })} />
+          )}
         </Group>
 
         {p.sides && (
-          <Group step={3} title="인쇄 면">
-            <div className="inline-flex rounded-lg border-2 border-line p-1">
-              {p.sides.map((s) => {
+          <Group step={3} title={p.sides.length > 2 ? "인쇄도수" : "인쇄 면"}>
+            <div className="flex flex-wrap gap-2">
+              {p.sides.filter((s) => !s.papers || s.papers.includes(sel.paper)).map((s) => {
                 const ok = sideOk.includes(s.id);
                 const on = s.id === sel.side;
                 return (
@@ -199,7 +344,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
                     aria-pressed={on}
                     title={ok ? undefined : `${paper.name}에서는 선택할 수 없어요`}
                     onClick={() => change({ side: s.id })}
-                    className={cn("rounded-md px-5 py-2 text-sm font-semibold", on ? "bg-brand text-white" : ok ? "hover:bg-brand-soft" : "text-mute/50")}
+                    className={cn("rounded-lg border-2 px-4 py-2 text-sm font-semibold transition-colors", on ? "border-brand bg-brand text-white" : ok ? "border-line hover:border-brand/50" : "border-line bg-surface text-mute/50 line-through")}
                   >
                     {s.name}
                   </button>
@@ -208,6 +353,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
             </div>
           </Group>
         )}
+
 
         <Group step={p.sides ? 4 : 3} title="수량" hint="수량이 많을수록 단가가 내려가요">
           <div className="flex flex-wrap gap-2">
@@ -279,6 +425,12 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
             })}
           </div>
         </Group>
+
+        {p.design && (
+          <Group step={p.sides ? 6 : 5} title="디자인" hint="인쇄 파일이 없으면 디자인을 맡길 수 있어요">
+            <DesignPanel menu={p.design} value={sel.design ?? null} double={isDouble(p, sel)} onChange={(d) => change({ design: d })} initial={emptyDesign(p)} />
+          </Group>
+        )}
       </div>
 
       {/* 가격 패널 */}
@@ -301,6 +453,9 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
                 <div key={l.id} className="flex justify-between"><dt className="text-mute">{l.name}</dt><dd>+{won(l.price)}</dd></div>
               ))}
               {sel.sets > 1 && <div className="flex justify-between"><dt className="text-mute">건수</dt><dd>× {sel.sets}종</dd></div>}
+              {price.designLines.map((l) => (
+                <div key={l.id} className="flex justify-between gap-3"><dt className="text-mute">{l.name}</dt><dd className="shrink-0">+{won(l.price)}</dd></div>
+              ))}
             </dl>
 
             <div className="mt-4 flex items-end justify-between border-t border-line pt-4">

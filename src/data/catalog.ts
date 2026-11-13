@@ -25,6 +25,10 @@ export interface Paper {
   sides?: string[];
   /** 추가 출고일 */
   leadDays?: number;
+  /** 전체 용지 목록에서 묶어 보여줄 분류 */
+  group?: string;
+  /** 접힌 상태에서도 먼저 보여줄 추천 용지 */
+  recommended?: boolean;
 }
 
 export interface Size {
@@ -41,6 +45,28 @@ export interface Side {
   id: string;
   name: string;
   factor: number;
+  /** 인쇄 면 수 (생략 = 1). 2면이면 뒷면 파일·디자인을 받는다 */
+  faces?: 1 | 2;
+  /** 이 용지에서만 선택 가능 (생략 = 전체) */
+  papers?: string[];
+}
+
+/** 디자인 의뢰 항목 (가격은 샘플) */
+export interface DesignOption {
+  id: string;
+  name: string;
+  price: number;
+}
+
+export interface DesignMenu {
+  /** 면별 디자인 종류 */
+  types: DesignOption[];
+  /** 면별 추가 편집 */
+  edits: DesignOption[];
+  /** 주문 전체에 붙는 옵션 */
+  extras: DesignOption[];
+  /** 디자인 의뢰 시 추가 출고일 */
+  leadDays: number;
 }
 
 export type FinishMode = "flat" | "perUnit" | "percent";
@@ -98,6 +124,10 @@ export interface Product {
   /** 수량이 min 이상이면 출고일 추가 */
   leadByQty?: { min: number; add: number }[];
   priceTable?: Record<string, Record<number, number>>;
+  /** 사이즈 직접 입력 허용 범위 (mm). surcharge 는 비규격 재단 할증 배수 */
+  customSize?: { minW: number; maxW: number; minH: number; maxH: number; surcharge: number };
+  /** 디자인 의뢰 메뉴 */
+  design?: DesignMenu;
   /** 이미지 업로드 → 칼선 자동 생성 도구 사용. 값은 함께 켜질 후가공 id */
   cutlineFinish?: string;
   /** 이미지 업로드 → 인쇄용 PDF 내보내기 도구 사용 (도련·안전 영역, mm) */
@@ -129,41 +159,67 @@ const businessCard: Product = {
   quantities: [100, 200, 300, 500, 1000, 2000],
   allowSets: true,
   papers: [
-    { id: "snow250", name: "스노우지 250g", desc: "매끈하고 선명한 기본 용지", factor: 1 },
-    {
-      id: "arte230",
-      name: "아르떼 230g",
-      desc: "부드러운 엠보 질감의 고급지",
-      factor: 1.35,
-      finishes: ["emboss", "round", "foil-gold", "foil-silver"],
-    },
-    {
-      id: "vannouveau260",
-      name: "반누보 260g",
-      desc: "도톰하고 은은한 무광 질감",
-      factor: 1.5,
-      sizes: ["std", "slim"],
-      leadDays: 1,
-    },
-    {
-      id: "kraft250",
-      name: "크라프트 250g",
-      desc: "자연스러운 갈색 재생지",
-      factor: 1.25,
-      sizes: ["std", "slim", "square"],
-      finishes: ["round"],
-      sides: ["single", "double"],
-    },
+    // 일반지
+    { id: "snow250", name: "스노우지 250g", desc: "매끈하고 선명한 기본 용지", factor: 1, group: "일반지", recommended: true },
+    { id: "snow300", name: "스노우지 300g", desc: "기본 용지를 더 도톰하게", factor: 1.1, group: "일반지" },
+    { id: "art250", name: "아트지 250g", desc: "광택이 있어 사진이 또렷해요", factor: 1, group: "일반지" },
+    { id: "art300", name: "아트지 300g", desc: "두꺼운 유광 용지", factor: 1.1, group: "일반지" },
+    { id: "mojo220", name: "모조지 220g", desc: "필기가 잘 되는 무광 용지", factor: 0.95, group: "일반지", finishes: ["round"] },
+    // 고급지
+    { id: "vannouveau260", name: "반누보 화이트 260g", desc: "도톰하고 은은한 무광 질감", factor: 1.5, group: "고급지", recommended: true, sizes: ["std", "slim"], leadDays: 1 },
+    { id: "vannouveau320", name: "반누보 화이트 320g", desc: "묵직한 두께의 반누보", factor: 1.65, group: "고급지", sizes: ["std", "slim"], leadDays: 1 },
+    { id: "arte230", name: "아르떼 울트라화이트 230g", desc: "부드러운 엠보 질감의 고급지", factor: 1.35, group: "고급지", recommended: true, finishes: ["emboss", "round", "foil-gold", "foil-silver"] },
+    { id: "arte310", name: "아르떼 울트라화이트 310g", desc: "두꺼운 아르떼", factor: 1.55, group: "고급지", finishes: ["emboss", "round", "foil-gold", "foil-silver"] },
+    { id: "rendezvous240", name: "랑데뷰 내추럴 240g", desc: "따뜻한 미색, 매끄러운 무광", factor: 1.45, group: "고급지" },
+    { id: "montblanc240", name: "몽블랑 240g", desc: "밝은 백색에 잔잔한 결", factor: 1.4, group: "고급지" },
+    // 질감·수입지
+    { id: "linen216", name: "린넨커버 216g", desc: "천처럼 촘촘한 격자 무늬", factor: 1.6, group: "질감·수입지", finishes: ["emboss", "round", "foil-gold", "foil-silver"], leadDays: 1 },
+    { id: "tintoretto300", name: "띤또레또 300g", desc: "수채화지 같은 거친 결", factor: 1.75, group: "질감·수입지", finishes: ["emboss", "round", "foil-gold", "foil-silver"], leadDays: 1 },
+    { id: "marshmallow209", name: "매쉬멜로우 209g", desc: "아주 매끈하고 하얀 고급지", factor: 1.5, group: "질감·수입지", leadDays: 1 },
+    { id: "extramatt350", name: "엑스트라매트 350g", desc: "빛 반사가 거의 없는 두꺼운 무광", factor: 1.8, group: "질감·수입지", sizes: ["std", "slim"], leadDays: 1 },
+    { id: "stardream240", name: "스타드림 실버 240g", desc: "은은하게 반짝이는 펄지", factor: 1.7, group: "질감·수입지", finishes: ["round", "emboss"], leadDays: 1 },
+    { id: "popset240", name: "팝셋 펄화이트 240g", desc: "고운 펄이 도는 백색지", factor: 1.7, group: "질감·수입지", finishes: ["round", "emboss"], leadDays: 1 },
+    // 특수지
+    { id: "kraft250", name: "크라프트 250g", desc: "자연스러운 갈색 재생지", factor: 1.25, group: "특수지", recommended: true, finishes: ["round"], sides: ["single", "double"] },
+    { id: "black380", name: "매트블랙 380g", desc: "검은 종이 · 화이트 인쇄 전용", factor: 1.9, group: "특수지", sizes: ["std", "slim"], sides: ["single-white", "double-white"], finishes: ["round", "foil-gold", "foil-silver"], leadDays: 2 },
+    { id: "yupo250", name: "유포지 250μ", desc: "찢어지지 않는 방수 합성지", factor: 1.7, group: "특수지", finishes: ["round"], sides: ["single", "double"], leadDays: 1 },
+    { id: "duo400", name: "듀오 화이트 400g", desc: "두 장을 합지한 아주 두꺼운 용지", factor: 1.9, group: "특수지", sizes: ["std", "slim"], finishes: ["foil-gold", "foil-silver", "emboss"], leadDays: 2 },
+    { id: "velvet350", name: "벨벳 화이트 350g", desc: "복숭아 껍질처럼 보드라운 촉감", factor: 1.75, group: "특수지", finishes: ["round", "foil-gold", "foil-silver"], leadDays: 1 },
   ],
   sizes: [
     { id: "std", name: "표준형", w: 90, h: 50, factor: 1 },
     { id: "slim", name: "슬림형", w: 86, h: 52, factor: 1.05 },
     { id: "square", name: "미니 정사각", w: 60, h: 60, factor: 1.1 },
   ],
+  customSize: { minW: 40, maxW: 100, minH: 40, maxH: 100, surcharge: 1.2 },
   sides: [
-    { id: "single", name: "단면", factor: 1 },
-    { id: "double", name: "양면", factor: 1.4 },
+    { id: "single", name: "단면 칼라", factor: 1 },
+    { id: "double", name: "양면 칼라", factor: 1.4, faces: 2 },
+    { id: "single-gold", name: "단면 칼라+금색", factor: 1.5 },
+    { id: "double-gold", name: "양면 칼라+금색", factor: 2, faces: 2 },
+    { id: "single-silver", name: "단면 칼라+은색", factor: 1.5 },
+    { id: "double-silver", name: "양면 칼라+은색", factor: 2, faces: 2 },
+    { id: "single-white", name: "단면 화이트 인쇄", factor: 1.3, papers: ["black380"] },
+    { id: "double-white", name: "양면 화이트 인쇄", factor: 1.8, faces: 2, papers: ["black380"] },
   ],
+  design: {
+    types: [
+      { id: "simple", name: "심플디자인", price: 15000 },
+      { id: "standard", name: "일반디자인", price: 30000 },
+      { id: "premium", name: "고급디자인", price: 50000 },
+    ],
+    edits: [
+      { id: "text", name: "문구 수정", price: 3000 },
+      { id: "image", name: "이미지 교체", price: 5000 },
+      { id: "layout", name: "레이아웃 변경", price: 10000 },
+    ],
+    extras: [
+      { id: "logo", name: "로고 제작", price: 40000 },
+      { id: "rush", name: "급행 시안(당일)", price: 10000 },
+      { id: "revision", name: "시안 추가 수정", price: 5000 },
+    ],
+    leadDays: 2,
+  },
   finishes: [
     { id: "coat-matte", name: "무광 코팅", desc: "차분하고 스크래치에 강함", mode: "percent", price: 18, group: "coating", leadDays: 1 },
     { id: "coat-gloss", name: "유광 코팅", desc: "선명하고 반짝이는 표면", mode: "percent", price: 18, group: "coating", leadDays: 1 },
@@ -188,7 +244,7 @@ const businessCard: Product = {
   leadByQty: [{ min: 1000, add: 1 }],
   printFile: { bleedMm: 3, safeMm: 3 },
   defaults: { qty: 200 },
-  highlights: ["4종 용지", "후가공 7종", "최소 100매부터"],
+  highlights: ["용지 22종", "후가공 7종", "디자인 의뢰 가능"],
   notes: ["건수(디자인 종류)는 같은 사양으로 내용만 다른 명함 수입니다.", "박·형압은 시안 확인 후 제작에 들어갑니다."],
 };
 

@@ -204,6 +204,7 @@ export function placeOrder(
 export function selectionHref(slug: string, s: Selection) {
   const q = new URLSearchParams({ paper: s.paper, size: s.size, qty: String(s.qty) });
   if (s.side) q.set("side", s.side);
+  if (s.custom) q.set("custom", `${s.custom.w}x${s.custom.h}`);
   if (s.finishes.length) q.set("finishes", s.finishes.join(","));
   return `/products/${slug}?${q.toString()}`;
 }
