@@ -6,7 +6,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { getProduct, type Paper } from "@/data/catalog";
 import type { FontSet } from "@/studio/fonts";
 import type { CardInfo, Side } from "@/studio/types";
-import { DEFAULT_FEEL, MaterialChip, Surface, thickness } from "@/components/product/MaterialSwatch";
+import { DEFAULT_FEEL, MaterialChip, MaterialPreview, Surface, thickness } from "@/components/product/MaterialSwatch";
 import { cn } from "@/lib/utils";
 import { CardSvg } from "./CardSvg";
 
@@ -89,6 +89,11 @@ export function PaperPicker({ value, onChange }: { value: string; onChange: (id:
       </button>
     </div>
   );
+}
+
+/** 선택한 용지를 기본 용지(스노우지)와 비교 */
+export function PaperCompare({ paper }: { paper: Paper }) {
+  return <MaterialPreview paper={paper} baseline={CARD_PAPERS[0]} />;
 }
 
 export function PaperSummary({ paper, double }: { paper: Paper; double: boolean }) {

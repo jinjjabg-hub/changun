@@ -289,20 +289,20 @@ const sticker: Product = {
   allowSets: true,
   papers: [
     // 종이
-    { id: "art", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 2, tags: ["실내용", "물에 약함"] }, name: "아트지 스티커", desc: "가장 보편적인 광택 소재", factor: 1, group: "종이", recommended: true },
-    { id: "mojo", feel: { tex: "grain", gloss: 0, tone: "#fbfaf4", rough: 1, thick: 2, tags: ["볼펜 필기 가능", "물에 약함"] }, name: "모조지 스티커", desc: "빛 반사가 적은 무광 소재", factor: 0.95, group: "종이" },
-    { id: "art-strong", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 2, tags: ["강한 접착", "떼면 자국 남음"] }, name: "아트지 초강접", desc: "거친 면에도 잘 붙는 강한 접착", factor: 1.15, group: "종이" },
-    { id: "removable", feel: { tex: "smooth", gloss: 1, tone: "#ffffff", rough: 0, thick: 2, tags: ["자국 없이 떼어짐"] }, name: "리무버블 아트지", desc: "자국 없이 떼었다 붙일 수 있어요", factor: 1.25, group: "종이" },
-    { id: "kraft", feel: { tex: "kraft", gloss: 0, tone: "#c59b6d", rough: 2, thick: 2, tags: ["갈색 바탕", "흰색은 표현 안 됨"] }, name: "크라프트 스티커", desc: "내추럴한 갈색 소재", factor: 1.3, group: "종이", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["coat-matte", "dmsong"] },
+    { id: "art", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 1, tags: ["실내용", "물에 약함"] }, name: "아트지 스티커", desc: "가장 보편적인 광택 소재", factor: 1, group: "종이", recommended: true },
+    { id: "mojo", feel: { tex: "grain", gloss: 0, tone: "#fbfaf4", rough: 1, thick: 1, tags: ["볼펜 필기 가능", "물에 약함"] }, name: "모조지 스티커", desc: "빛 반사가 적은 무광 소재", factor: 0.95, group: "종이" },
+    { id: "art-strong", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 1, tags: ["강한 접착", "떼면 자국 남음"] }, name: "아트지 초강접", desc: "거친 면에도 잘 붙는 강한 접착", factor: 1.15, group: "종이" },
+    { id: "removable", feel: { tex: "smooth", gloss: 1, tone: "#ffffff", rough: 0, thick: 1, tags: ["자국 없이 떼어짐"] }, name: "리무버블 아트지", desc: "자국 없이 떼었다 붙일 수 있어요", factor: 1.25, group: "종이" },
+    { id: "kraft", feel: { tex: "kraft", gloss: 0, tone: "#c59b6d", rough: 2, thick: 1, tags: ["갈색 바탕", "흰색은 표현 안 됨"] }, name: "크라프트 스티커", desc: "내추럴한 갈색 소재", factor: 1.3, group: "종이", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["coat-matte", "dmsong"] },
     // 필름·방수
-    { id: "pet", feel: { tex: "clear", gloss: 2, tone: "#ffffff", rough: 0, thick: 2, tags: ["투명", "방수", "흰색은 화이트 인쇄 필요"] }, name: "투명 PET", desc: "배경이 비치는 투명 소재 (코팅 불필요)", factor: 1.6, group: "필름·방수", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["white", "dmsong"], leadDays: 1 },
-    { id: "yupo", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfd", rough: 0, thick: 2, tags: ["방수", "찢어지지 않음"] }, name: "유포지(방수)", desc: "물과 오염에 강한 합성지", factor: 1.8, group: "필름·방수", recommended: true, finishes: ["dmsong"], leadDays: 1 },
-    { id: "pvc-white", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 3, tags: ["방수", "야외 사용"] }, name: "백색 PVC", desc: "야외에서도 오래 가는 비닐 소재", factor: 1.9, group: "필름·방수", finishes: ["dmsong", "coat-gloss"], leadDays: 1 },
-    { id: "silver", feel: { tex: "metal", gloss: 1, tone: "#c9ccd1", rough: 0, thick: 2, tags: ["무광 은색", "방수"] }, name: "은무 데드롱", desc: "무광 은색 금속 느낌", factor: 2, group: "필름·방수", finishes: ["dmsong"], leadDays: 1 },
+    { id: "pet", feel: { tex: "clear", gloss: 2, tone: "#ffffff", rough: 0, thick: 1, tags: ["투명", "방수", "흰색은 화이트 인쇄 필요"] }, name: "투명 PET", desc: "배경이 비치는 투명 소재 (코팅 불필요)", factor: 1.6, group: "필름·방수", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["white", "dmsong"], leadDays: 1 },
+    { id: "yupo", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfd", rough: 0, thick: 1, tags: ["방수", "찢어지지 않음"] }, name: "유포지(방수)", desc: "물과 오염에 강한 합성지", factor: 1.8, group: "필름·방수", recommended: true, finishes: ["dmsong"], leadDays: 1 },
+    { id: "pvc-white", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 1, tags: ["방수", "야외 사용"] }, name: "백색 PVC", desc: "야외에서도 오래 가는 비닐 소재", factor: 1.9, group: "필름·방수", finishes: ["dmsong", "coat-gloss"], leadDays: 1 },
+    { id: "silver", feel: { tex: "metal", gloss: 1, tone: "#c9ccd1", rough: 0, thick: 1, tags: ["무광 은색", "방수"] }, name: "은무 데드롱", desc: "무광 은색 금속 느낌", factor: 2, group: "필름·방수", finishes: ["dmsong"], leadDays: 1 },
     // 특수
-    { id: "holo-paper", feel: { tex: "holo", gloss: 2, tone: "#e8ecf5", rough: 0, thick: 2, tags: ["무지개빛 반짝임"] }, name: "홀로그램 스티커지", desc: "소재 자체가 무지개빛으로 반짝여요", factor: 2.2, group: "특수", finishes: ["dmsong"], leadDays: 2 },
-    { id: "neon", feel: { tex: "smooth", gloss: 0, tone: "#f4ff5c", rough: 1, thick: 2, tags: ["형광 바탕", "실내용"] }, name: "형광지 스티커", desc: "눈에 확 띄는 형광 바탕", factor: 1.4, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"] },
-    { id: "hanji", feel: { tex: "laid", gloss: 0, tone: "#f6f1e4", rough: 3, thick: 2, tags: ["섬유 결이 보임", "전통 느낌"] }, name: "한지 스티커", desc: "결이 살아 있는 전통 종이", factor: 1.7, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"], leadDays: 1 },
+    { id: "holo-paper", feel: { tex: "holo", gloss: 2, tone: "#e8ecf5", rough: 0, thick: 1, tags: ["무지개빛 반짝임"] }, name: "홀로그램 스티커지", desc: "소재 자체가 무지개빛으로 반짝여요", factor: 2.2, group: "특수", finishes: ["dmsong"], leadDays: 2 },
+    { id: "neon", feel: { tex: "smooth", gloss: 0, tone: "#f4ff5c", rough: 1, thick: 1, tags: ["형광 바탕", "실내용"] }, name: "형광지 스티커", desc: "눈에 확 띄는 형광 바탕", factor: 1.4, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"] },
+    { id: "hanji", feel: { tex: "laid", gloss: 0, tone: "#f6f1e4", rough: 3, thick: 1, tags: ["섬유 결이 보임", "전통 느낌"] }, name: "한지 스티커", desc: "결이 살아 있는 전통 종이", factor: 1.7, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"], leadDays: 1 },
   ],
   sizes: [
     { id: "r50", name: "원형 50mm", w: 50, h: 50, factor: 1, shape: "round" },

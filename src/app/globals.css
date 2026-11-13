@@ -150,3 +150,4 @@ button:disabled { cursor: not-allowed; }
 @keyframes cw-fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .cw-fade-up { animation: cw-fade-up .25s ease both; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .cw-fade-up { animation: none; } }
+@keyframes cw-sweep { 0% { transform: translate(0, 0); } 50% { transform: translate(55%, 50%); } 100% { transform: translate(0, 0); } }

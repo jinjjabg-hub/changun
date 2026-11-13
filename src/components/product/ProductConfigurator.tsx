@@ -265,7 +265,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
               );
             };
             // 용지가 적으면 전부 펼치고, 많으면 추천만 먼저 보여준 뒤 분류별 전체 목록을 펼친다
-            const preview = <div className="mt-4"><p className="mb-1.5 text-xs font-bold text-mute">선택한 {p.paperLabel} 재질 미리보기</p><MaterialPreview paper={paper} label={p.name} unit={p.art === "card" ? "card" : p.art === "cloth" || p.art === "xbanner" ? "banner" : "sheet"} /></div>;
+            const preview = <div className="mt-4"><p className="mb-1.5 text-xs font-bold text-mute">선택한 {p.paperLabel}은 이런 느낌이에요</p><MaterialPreview paper={paper} baseline={p.papers.find((x) => x.id === p.defaults?.paper) ?? p.papers[0]} /></div>;
             if (p.papers.length <= 6) return <><div className="grid gap-2 sm:grid-cols-2">{p.papers.map((x) => card(x, false))}</div>{preview}</>;
             const groups = Array.from(new Set(p.papers.map((x) => x.group ?? "기타")));
             const short = p.papers.filter((x) => x.recommended || x.id === sel.paper);

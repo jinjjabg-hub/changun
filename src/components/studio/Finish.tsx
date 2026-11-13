@@ -8,7 +8,7 @@ import { preflight, summarize, type Check } from "@/studio/preflight";
 import { CARD, type CardInfo, type Design, type SideKey } from "@/studio/types";
 import { cn } from "@/lib/utils";
 import { CardSvg } from "./CardSvg";
-import { CardOnPaper, PaperPicker, PaperSummary, paperById } from "./PaperPicker";
+import { CardOnPaper, PaperCompare, PaperPicker, PaperSummary, paperById } from "./PaperPicker";
 
 const ICON = { pass: CheckCircle2, warn: AlertTriangle, fail: XCircle } as const;
 const TONE = { pass: "text-brand", warn: "text-[#8a5a06]", fail: "text-danger" } as const;
@@ -70,6 +70,7 @@ export function Finish({ design, info, fonts, paperId, onPaper, onFix }: { desig
         {view === "paper" && <p className="mt-2 text-xs text-mute">※ 내 디자인을 고른 용지의 질감·색 위에 겹쳐 흉내 낸 모습이에요. 실제 인쇄 색과 질감은 실물 샘플로 확인해 주세요.</p>}
         <div className="mt-3"><PaperSummary paper={paper} double={hasBack} /></div>
         <div className="mt-3"><PaperPicker value={paper.id} onChange={onPaper} /></div>
+        <div className="mt-4"><PaperCompare paper={paper} /></div>
 
         <h2 className="mb-2 mt-8 text-lg font-extrabold">인쇄 규격 자동 검사</h2>
         <p className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
