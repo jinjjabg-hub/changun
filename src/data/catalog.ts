@@ -131,7 +131,14 @@ export interface Product {
   /** 이미지 업로드 → 칼선 자동 생성 도구 사용. 값은 함께 켜질 후가공 id */
   cutlineFinish?: string;
   /** 이미지 업로드 → 인쇄용 PDF 내보내기 도구 사용 (도련·안전 영역, mm) */
-  printFile?: { bleedMm: number; safeMm: number };
+  printFile?: {
+    bleedMm: number;
+    safeMm: number;
+    /** 해상도 판정 기준 [충분, 보통] dpi. 생략 = [250, 150]. 멀리서 보는 대형 출력물은 낮게 잡는다 */
+    dpi?: [number, number];
+    /** PDF 축소 비율 (예: 0.1 = 1/10). 대형 현수막은 실제 크기 PDF를 만들 수 없어 축소본으로 만든다 */
+    scale?: number;
+  };
   /** 상세 페이지 진입 시 기본 선택 */
   defaults?: { paper?: string; size?: string; qty?: number };
   highlights: string[];
@@ -262,33 +269,21 @@ const sticker: Product = {
   quantities: [100, 200, 500, 1000, 2000, 5000],
   allowSets: true,
   papers: [
-    { id: "art", name: "아트지 스티커", desc: "가장 보편적인 광택 소재", factor: 1 },
-    { id: "mojo", name: "모조지 스티커", desc: "빛 반사가 적은 무광 소재", factor: 0.95 },
-    {
-      id: "pet",
-      name: "투명 PET",
-      desc: "배경이 비치는 투명 소재 (코팅 불필요)",
-      factor: 1.6,
-      sizes: ["r50", "r70", "s50", "r90x60"],
-      finishes: ["white", "dmsong"],
-      leadDays: 1,
-    },
-    {
-      id: "yupo",
-      name: "유포지(방수)",
-      desc: "물과 오염에 강한 합성지",
-      factor: 1.8,
-      finishes: ["dmsong"],
-      leadDays: 1,
-    },
-    {
-      id: "kraft",
-      name: "크라프트 스티커",
-      desc: "내추럴한 갈색 소재",
-      factor: 1.3,
-      sizes: ["r50", "r70", "s50", "r90x60"],
-      finishes: ["coat-matte", "dmsong"],
-    },
+    // 종이
+    { id: "art", name: "아트지 스티커", desc: "가장 보편적인 광택 소재", factor: 1, group: "종이", recommended: true },
+    { id: "mojo", name: "모조지 스티커", desc: "빛 반사가 적은 무광 소재", factor: 0.95, group: "종이" },
+    { id: "art-strong", name: "아트지 초강접", desc: "거친 면에도 잘 붙는 강한 접착", factor: 1.15, group: "종이" },
+    { id: "removable", name: "리무버블 아트지", desc: "자국 없이 떼었다 붙일 수 있어요", factor: 1.25, group: "종이" },
+    { id: "kraft", name: "크라프트 스티커", desc: "내추럴한 갈색 소재", factor: 1.3, group: "종이", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["coat-matte", "dmsong"] },
+    // 필름·방수
+    { id: "pet", name: "투명 PET", desc: "배경이 비치는 투명 소재 (코팅 불필요)", factor: 1.6, group: "필름·방수", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["white", "dmsong"], leadDays: 1 },
+    { id: "yupo", name: "유포지(방수)", desc: "물과 오염에 강한 합성지", factor: 1.8, group: "필름·방수", recommended: true, finishes: ["dmsong"], leadDays: 1 },
+    { id: "pvc-white", name: "백색 PVC", desc: "야외에서도 오래 가는 비닐 소재", factor: 1.9, group: "필름·방수", finishes: ["dmsong", "coat-gloss"], leadDays: 1 },
+    { id: "silver", name: "은무 데드롱", desc: "무광 은색 금속 느낌", factor: 2, group: "필름·방수", finishes: ["dmsong"], leadDays: 1 },
+    // 특수
+    { id: "holo-paper", name: "홀로그램 스티커지", desc: "소재 자체가 무지개빛으로 반짝여요", factor: 2.2, group: "특수", finishes: ["dmsong"], leadDays: 2 },
+    { id: "neon", name: "형광지 스티커", desc: "눈에 확 띄는 형광 바탕", factor: 1.4, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"] },
+    { id: "hanji", name: "한지 스티커", desc: "결이 살아 있는 전통 종이", factor: 1.7, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"], leadDays: 1 },
   ],
   sizes: [
     { id: "r50", name: "원형 50mm", w: 50, h: 50, factor: 1, shape: "round" },
@@ -317,8 +312,27 @@ const sticker: Product = {
   setupFee: 3000,
   baseLead: 3,
   leadByQty: [{ min: 2000, add: 1 }],
+  customSize: { minW: 20, maxW: 200, minH: 20, maxH: 200, surcharge: 1.15 },
+  design: {
+    types: [
+      { id: "simple", name: "심플디자인", price: 10000 },
+      { id: "standard", name: "일반디자인", price: 20000 },
+      { id: "premium", name: "고급디자인", price: 40000 },
+    ],
+    edits: [
+      { id: "text", name: "문구 수정", price: 3000 },
+      { id: "image", name: "이미지 교체", price: 5000 },
+      { id: "layout", name: "레이아웃 변경", price: 10000 },
+    ],
+    extras: [
+      { id: "logo", name: "로고 제작", price: 40000 },
+      { id: "rush", name: "급행 시안(당일)", price: 10000 },
+      { id: "revision", name: "시안 추가 수정", price: 5000 },
+    ],
+    leadDays: 2,
+  },
   cutlineFinish: "dmsong",
-  highlights: ["원형·사각·자유 모양", "방수 소재", "화이트 인쇄"],
+  highlights: ["소재 12종", "모양 칼선 자동 생성", "사이즈 직접 입력"],
   notes: ["도무송 칼선은 시안 확정 후 제작됩니다.", "투명 PET는 코팅 없이도 방수·내구성이 있습니다."],
 };
 
@@ -336,28 +350,24 @@ const flyer: Product = {
   quantities: [500, 1000, 2000, 3000, 5000, 10000],
   allowSets: true,
   papers: [
-    {
-      id: "art90",
-      name: "아트지 90g",
-      desc: "가볍고 경제적인 전단 용지",
-      factor: 0.8,
-      finishes: ["miss"],
-    },
-    { id: "snow120", name: "스노우지 120g", desc: "가장 많이 쓰는 균형 잡힌 용지", factor: 1 },
-    {
-      id: "snow150",
-      name: "스노우지 150g",
-      desc: "도톰해서 리플렛에 적합",
-      factor: 1.2,
-    },
-    {
-      id: "rendezvous",
-      name: "랑데뷰 190g",
-      desc: "고급스러운 질감의 두꺼운 용지",
-      factor: 1.6,
-      sizes: ["a4", "a5", "a6", "b5"],
-      leadDays: 1,
-    },
+    // 일반지
+    { id: "art90", name: "아트지 90g", desc: "가볍고 경제적인 전단 용지", factor: 0.8, group: "일반지", finishes: ["miss"] },
+    { id: "art120", name: "아트지 120g", desc: "광택 있는 기본 전단 용지", factor: 0.95, group: "일반지", recommended: true },
+    { id: "art150", name: "아트지 150g", desc: "도톰한 유광, 사진이 선명해요", factor: 1.15, group: "일반지" },
+    { id: "art180", name: "아트지 180g", desc: "포스터·메뉴판에 맞는 두께", factor: 1.35, group: "일반지" },
+    { id: "snow100", name: "스노우지 100g", desc: "얇은 무광 용지", factor: 0.9, group: "일반지", finishes: ["fold2", "perforation"] },
+    { id: "snow120", name: "스노우지 120g", desc: "가장 많이 쓰는 균형 잡힌 용지", factor: 1, group: "일반지", recommended: true },
+    { id: "snow150", name: "스노우지 150g", desc: "도톰해서 리플렛에 적합", factor: 1.2, group: "일반지", recommended: true },
+    { id: "snow180", name: "스노우지 180g", desc: "두꺼운 무광, 고급 리플렛용", factor: 1.4, group: "일반지" },
+    { id: "mojo80", name: "모조지 80g", desc: "복사지 느낌, 필기가 잘 돼요", factor: 0.75, group: "일반지", finishes: ["perforation"] },
+    { id: "mojo100", name: "모조지 100g", desc: "신청서·설문지에 좋은 무광", factor: 0.85, group: "일반지", finishes: ["fold2", "perforation", "miss"] },
+    // 고급지
+    { id: "rendezvous130", name: "랑데뷰 130g", desc: "색이 깊게 나오는 고급 무광", factor: 1.4, group: "고급지", leadDays: 1 },
+    { id: "rendezvous", name: "랑데뷰 190g", desc: "고급스러운 질감의 두꺼운 용지", factor: 1.6, group: "고급지", recommended: true, sizes: ["a4", "a5", "a6", "b5"], leadDays: 1 },
+    { id: "vannouveau150", name: "반누보 150g", desc: "은은한 결이 있는 수입지", factor: 1.7, group: "고급지", sizes: ["a4", "a5", "a6", "b5"], finishes: ["fold2", "fold3", "miss"], leadDays: 1 },
+    // 친환경·특수
+    { id: "recycled100", name: "재생지 100g", desc: "자연스러운 미색의 친환경 용지", factor: 1.05, group: "친환경·특수", finishes: ["fold2", "perforation"] },
+    { id: "kraft120", name: "크라프트 120g", desc: "갈색 재생지, 감성 전단용", factor: 1.3, group: "친환경·특수", sizes: ["a4", "a5", "a6", "b5"], finishes: ["fold2", "miss"], leadDays: 1 },
   ],
   sizes: [
     { id: "a3", name: "A3 (297×420)", w: 297, h: 420, factor: 1.9 },
@@ -366,10 +376,32 @@ const flyer: Product = {
     { id: "a5", name: "A5 (148×210)", w: 148, h: 210, factor: 0.55 },
     { id: "a6", name: "A6 (105×148)", w: 105, h: 148, factor: 0.3 },
   ],
+  customSize: { minW: 90, maxW: 420, minH: 90, maxH: 600, surcharge: 1.15 },
   sides: [
-    { id: "single", name: "단면", factor: 1 },
-    { id: "double", name: "양면", factor: 1.5 },
+    { id: "single", name: "단면 칼라", factor: 1 },
+    { id: "double", name: "양면 칼라", factor: 1.5, faces: 2 },
+    { id: "single-mono", name: "단면 흑백", factor: 0.7 },
+    { id: "double-mono", name: "양면 흑백", factor: 1, faces: 2 },
   ],
+  design: {
+    types: [
+      { id: "simple", name: "심플디자인", price: 30000 },
+      { id: "standard", name: "일반디자인", price: 60000 },
+      { id: "premium", name: "고급디자인", price: 100000 },
+    ],
+    edits: [
+      { id: "text", name: "문구 수정", price: 3000 },
+      { id: "image", name: "이미지 교체", price: 5000 },
+      { id: "layout", name: "레이아웃 변경", price: 10000 },
+    ],
+    extras: [
+      { id: "logo", name: "로고 제작", price: 40000 },
+      { id: "rush", name: "급행 시안(당일)", price: 10000 },
+      { id: "revision", name: "시안 추가 수정", price: 5000 },
+    ],
+    leadDays: 2,
+  },
+  printFile: { bleedMm: 3, safeMm: 5 },
   finishes: [
     { id: "coat-matte", name: "무광 코팅", desc: "표면을 보호하고 고급스럽게", mode: "percent", price: 22, group: "coating", leadDays: 1, minQty: 500, maxQty: 3000 },
     { id: "fold2", name: "2단 접지", desc: "반으로 접어 리플렛으로", mode: "perUnit", price: 12, group: "fold", leadDays: 1, sizes: ["a3", "a4", "b5"] },
@@ -391,7 +423,7 @@ const flyer: Product = {
   baseLead: 3,
   leadByQty: [{ min: 5000, add: 1 }],
   defaults: { paper: "snow120", size: "a4", qty: 1000 },
-  highlights: ["A3~A6 규격", "접지·오시·미싱", "대량 할인"],
+  highlights: ["용지 15종", "접지·오시·미싱", "사이즈 직접 입력"],
   notes: ["아트지 90g은 접지가 불가합니다.", "접지 가공은 A4 이하 규격에서 제공됩니다."],
 };
 
@@ -407,32 +439,17 @@ const cloth: Product = {
   unit: "장",
   quantities: [1, 2, 3, 5, 10],
   papers: [
-    { id: "cloth", name: "일반 현수막천", desc: "가장 많이 쓰는 기본 원단", factor: 1 },
-    {
-      id: "mesh",
-      name: "메쉬(바람통과)",
-      desc: "구멍 사이로 바람이 통하는 원단",
-      factor: 1.3,
-      finishes: ["eyelet4", "eyelet-all", "rope", "sew"],
-      leadDays: 1,
-    },
-    {
-      id: "gloss",
-      name: "프리미엄 광택천",
-      desc: "색이 진하고 선명한 고급 원단",
-      factor: 1.5,
-      finishes: ["eyelet4", "eyelet-all", "rope", "sew", "windhole"],
-      leadDays: 1,
-    },
-    {
-      id: "fabric",
-      name: "패브릭(섬유)",
-      desc: "실내용, 주름이 적은 직물",
-      factor: 1.9,
-      sizes: ["w300", "w500", "v90x180", "w400"],
-      finishes: ["sew", "rope", "pole"],
-      leadDays: 1,
-    },
+    // 일반
+    { id: "cloth", name: "일반 현수막천", desc: "가장 많이 쓰는 기본 원단", factor: 1, group: "일반", recommended: true },
+    { id: "solvent", name: "장기용 현수막천", desc: "색 바램이 적어 오래 걸어 둘 때", factor: 1.25, group: "일반", finishes: ["eyelet4", "eyelet-all", "rope", "sew", "windhole"] },
+    { id: "mesh", name: "메쉬(바람통과)", desc: "구멍 사이로 바람이 통하는 원단", factor: 1.3, group: "일반", recommended: true, finishes: ["eyelet4", "eyelet-all", "rope", "sew"], leadDays: 1 },
+    { id: "tarpaulin", name: "타포린(방수)", desc: "두껍고 질긴 방수 천막 소재", factor: 1.6, group: "일반", finishes: ["eyelet4", "eyelet-all", "sew"], leadDays: 1 },
+    // 고급
+    { id: "gloss", name: "프리미엄 광택천", desc: "색이 진하고 선명한 고급 원단", factor: 1.5, group: "고급", recommended: true, finishes: ["eyelet4", "eyelet-all", "rope", "sew", "windhole"], leadDays: 1 },
+    { id: "blackout", name: "암막 현수막천", desc: "뒤가 비치지 않아 양쪽에서 깔끔", factor: 1.7, group: "고급", finishes: ["eyelet4", "eyelet-all", "rope", "sew", "pole"], leadDays: 1 },
+    // 실내·직물
+    { id: "fabric", name: "패브릭(섬유)", desc: "실내용, 주름이 적은 직물", factor: 1.9, group: "실내·직물", recommended: true, sizes: ["w300", "w500", "v90x180", "w400"], finishes: ["sew", "rope", "pole"], leadDays: 1 },
+    { id: "satin", name: "새틴(광택 직물)", desc: "은은한 광택의 행사·무대용", factor: 2.2, group: "실내·직물", sizes: ["w300", "v90x180", "w400"], finishes: ["sew", "pole"], leadDays: 2 },
   ],
   sizes: [
     { id: "v90x180", name: "세로 0.9×1.8m", w: 900, h: 1800, factor: 1.62 },
@@ -449,6 +466,26 @@ const cloth: Product = {
     { id: "sew", name: "테두리 재봉", desc: "가장자리 풀림 방지", mode: "perUnit", price: 4000 },
     { id: "windhole", name: "바람구멍 가공", desc: "일반 원단용, 찢어짐 완화", mode: "flat", price: 4000, excludes: ["rope"] },
   ],
+  customSize: { minW: 500, maxW: 10000, minH: 500, maxH: 1800, surcharge: 1.1 },
+  design: {
+    types: [
+      { id: "simple", name: "심플디자인", price: 20000 },
+      { id: "standard", name: "일반디자인", price: 40000 },
+      { id: "premium", name: "고급디자인", price: 70000 },
+    ],
+    edits: [
+      { id: "text", name: "문구 수정", price: 3000 },
+      { id: "image", name: "이미지 교체", price: 5000 },
+      { id: "layout", name: "레이아웃 변경", price: 10000 },
+    ],
+    extras: [
+      { id: "logo", name: "로고 제작", price: 40000 },
+      { id: "rush", name: "급행 시안(당일)", price: 10000 },
+      { id: "revision", name: "시안 추가 수정", price: 5000 },
+    ],
+    leadDays: 2,
+  },
+  printFile: { bleedMm: 20, safeMm: 50, dpi: [30, 15], scale: 0.1 },
   baseUnit: 4200,
   tiers: [
     { min: 0, rate: 1 },
@@ -461,7 +498,7 @@ const cloth: Product = {
   baseLead: 2,
   leadByQty: [{ min: 10, add: 1 }],
   defaults: { size: "w300", qty: 1 },
-  highlights: ["맞춤 규격", "방수·메쉬 원단", "고리·로프 마감"],
+  highlights: ["원단 8종", "사이즈 직접 입력", "고리·로프 마감"],
   notes: ["시안 확정 후 출력합니다.", "5m 이상 현수막은 수량과 관계없이 별도 포장비가 발생할 수 있습니다."],
 };
 
@@ -478,24 +515,16 @@ const xbanner: Product = {
   unit: "개",
   quantities: [1, 2, 3, 5, 10, 20],
   papers: [
-    { id: "pp", name: "PP 합지", desc: "가장 보편적인 출력 소재", factor: 1 },
-    {
-      id: "pvc",
-      name: "방염 PVC",
-      desc: "공공시설 규정에 맞는 방염 소재",
-      factor: 1.35,
-      leadDays: 1,
-      sides: ["single"],
-    },
-    {
-      id: "fabric",
-      name: "패브릭",
-      desc: "접어도 주름이 적은 직물",
-      factor: 1.7,
-      sizes: ["x60", "x80", "roll85"],
-      finishes: ["bag", "stand-premium"],
-      leadDays: 1,
-    },
+    // 기본
+    { id: "pp", name: "PP 합지", desc: "가장 보편적인 출력 소재", factor: 1, group: "기본", recommended: true },
+    { id: "pet", name: "PET 배너", desc: "말림이 적고 평평하게 펴져요", factor: 1.2, group: "기본", recommended: true },
+    { id: "pet-gray", name: "그레이백 PET", desc: "뒷면이 회색이라 빛이 비치지 않아요", factor: 1.35, group: "기본", sides: ["single"] },
+    // 방염·야외
+    { id: "pvc", name: "방염 PVC", desc: "공공시설 규정에 맞는 방염 소재", factor: 1.35, group: "방염·야외", recommended: true, leadDays: 1, sides: ["single"] },
+    { id: "yupo", name: "방수 유포지", desc: "물에 강해 야외 행사에 적합", factor: 1.3, group: "방염·야외", sides: ["single"] },
+    // 직물
+    { id: "fabric", name: "패브릭", desc: "접어도 주름이 적은 직물", factor: 1.7, group: "직물", recommended: true, sizes: ["x60", "x80", "roll85"], finishes: ["bag", "stand-premium"], leadDays: 1 },
+    { id: "canvas", name: "캔버스", desc: "그림 같은 질감의 두꺼운 직물", factor: 1.9, group: "직물", sizes: ["x60", "x80"], finishes: ["bag", "stand-premium"], sides: ["single"], leadDays: 2 },
   ],
   sizes: [
     { id: "x60", name: "X배너 60×160cm", w: 600, h: 1600, factor: 1 },
@@ -506,7 +535,7 @@ const xbanner: Product = {
   ],
   sides: [
     { id: "single", name: "단면 출력", factor: 1 },
-    { id: "double", name: "양면 출력", factor: 1.7 },
+    { id: "double", name: "양면 출력", factor: 1.7, faces: 2 },
   ],
   finishes: [
     { id: "stand-basic", name: "기본 거치대", desc: "알루미늄 일반형", mode: "perUnit", price: 6000, group: "stand" },
@@ -514,6 +543,25 @@ const xbanner: Product = {
     { id: "bag", name: "운반 가방", desc: "휴대용 가방 포함", mode: "perUnit", price: 3000 },
     { id: "lamination", name: "표면 라미네이팅", desc: "긁힘과 물튀김 방지", mode: "percent", price: 15, leadDays: 1 },
   ],
+  design: {
+    types: [
+      { id: "simple", name: "심플디자인", price: 25000 },
+      { id: "standard", name: "일반디자인", price: 50000 },
+      { id: "premium", name: "고급디자인", price: 80000 },
+    ],
+    edits: [
+      { id: "text", name: "문구 수정", price: 3000 },
+      { id: "image", name: "이미지 교체", price: 5000 },
+      { id: "layout", name: "레이아웃 변경", price: 10000 },
+    ],
+    extras: [
+      { id: "logo", name: "로고 제작", price: 40000 },
+      { id: "rush", name: "급행 시안(당일)", price: 10000 },
+      { id: "revision", name: "시안 추가 수정", price: 5000 },
+    ],
+    leadDays: 2,
+  },
+  printFile: { bleedMm: 5, safeMm: 30, dpi: [100, 60] },
   baseUnit: 18000,
   tiers: [
     { min: 0, rate: 1 },
@@ -527,7 +575,7 @@ const xbanner: Product = {
   baseLead: 3,
   leadByQty: [{ min: 10, add: 1 }],
   defaults: { qty: 1 },
-  highlights: ["X배너·롤업 5종", "양면 출력", "거치대·가방 옵션"],
+  highlights: ["소재 7종", "양면 출력", "거치대·가방 옵션"],
   notes: ["거치대는 선택하지 않으면 출력물만 발송됩니다.", "대형 롤업은 화물로 별도 배송됩니다."],
 };
 

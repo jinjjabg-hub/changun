@@ -89,8 +89,9 @@ export function sizeOf(p: Product, sel: Selection): Size {
   if (sel.size === CUSTOM_SIZE && p.customSize && sel.custom) {
     const base = p.sizes[0];
     const { w, h } = sel.custom;
-    // 면적 비례 + 비규격 재단 할증. 기본 규격보다 작아도 기본가 밑으로는 내려가지 않는다.
-    const factor = Math.max(1, (w * h) / (base.w * base.h)) * p.customSize.surcharge;
+    // 기준 규격의 면적당 단가에 비례 + 비규격 재단 할증. 가장 작은 규격 가격 밑으로는 내려가지 않는다.
+    const floor = Math.min(...p.sizes.map((x) => x.factor));
+    const factor = Math.max(floor, ((w * h) / (base.w * base.h)) * base.factor) * p.customSize.surcharge;
     return { id: CUSTOM_SIZE, name: `직접 입력 ${w}×${h}mm`, w, h, factor };
   }
   return p.sizes.find((x) => x.id === sel.size) ?? p.sizes[0];

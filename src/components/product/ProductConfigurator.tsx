@@ -97,7 +97,7 @@ function DesignPick({ label, options, id, qty, onChange, allowNone }: { label: s
   );
 }
 
-function DesignPanel({ menu, value, double, initial, onChange }: { menu: DesignMenu; value: DesignSelection | null; double: boolean; initial: DesignSelection; onChange: (d: DesignSelection | null) => void }) {
+function DesignPanel({ menu, value, double, canBack, initial, onChange }: { menu: DesignMenu; value: DesignSelection | null; double: boolean; canBack: boolean; initial: DesignSelection; onChange: (d: DesignSelection | null) => void }) {
   if (!value) {
     return (
       <div className="flex flex-wrap items-center gap-3">
@@ -127,7 +127,7 @@ function DesignPanel({ menu, value, double, initial, onChange }: { menu: DesignM
         <span className="text-xs text-mute">시안 확인 후 인쇄에 들어가요 · 출고일 +{menu.leadDays}일 (영업일)</span>
       </div>
       {row("front", "전면", false)}
-      {double ? row("back", "후면", true) : <p className="border-t border-line py-3 text-xs text-mute">후면 디자인은 양면 인쇄를 선택하면 추가할 수 있어요.</p>}
+      {double ? row("back", "후면", true) : canBack && <p className="border-t border-line py-3 text-xs text-mute">후면 디자인은 양면 인쇄를 선택하면 추가할 수 있어요.</p>}
       <div className="grid gap-x-4 gap-y-2 border-t border-line py-3 text-sm md:grid-cols-[44px_minmax(0,1fr)_minmax(0,1fr)] [&>*]:min-w-0">
         <span className="pt-1.5 font-bold text-brand">옵션</span>
         <DesignPick label="디자인 옵션" options={menu.extras} id={value.extra} qty={value.extraQty} allowNone onChange={(extra, extraQty) => onChange({ ...value, extra, extraQty })} />
@@ -212,6 +212,8 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
             double={isDouble(p, sel)}
             bleedMm={p.printFile.bleedMm}
             safeMm={p.printFile.safeMm}
+            dpi={p.printFile.dpi}
+            scale={p.printFile.scale}
             productName={p.name}
             applied={artwork}
             onApply={(a) => { setArtwork(a); setAdded(false); }}
@@ -428,7 +430,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
 
         {p.design && (
           <Group step={p.sides ? 6 : 5} title="디자인" hint="인쇄 파일이 없으면 디자인을 맡길 수 있어요">
-            <DesignPanel menu={p.design} value={sel.design ?? null} double={isDouble(p, sel)} onChange={(d) => change({ design: d })} initial={emptyDesign(p)} />
+            <DesignPanel menu={p.design} value={sel.design ?? null} double={isDouble(p, sel)} canBack={!!p.sides?.some((x) => x.faces === 2)} onChange={(d) => change({ design: d })} initial={emptyDesign(p)} />
           </Group>
         )}
       </div>
