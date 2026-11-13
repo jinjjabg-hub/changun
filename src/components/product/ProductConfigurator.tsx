@@ -31,6 +31,7 @@ import { SampleBadge } from "@/components/site/SampleBadge";
 import { ProductArt } from "@/components/site/ProductArt";
 import { CutlineTool, type Artwork } from "./CutlineTool";
 import { PrintFileTool } from "./PrintFileTool";
+import { MaterialChip, MaterialPreview } from "./MaterialSwatch";
 
 function Group({ step, title, hint, children }: { step: number; title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -245,8 +246,10 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
                   type="button"
                   aria-pressed={on}
                   onClick={() => change({ paper: x.id })}
-                  className={cn("rounded-xl border-2 text-left transition-colors", compact ? "p-2.5" : "p-3.5", on ? "border-brand bg-brand-soft" : "border-line hover:border-brand/50")}
+                  className={cn("flex gap-3 rounded-xl border-2 text-left transition-colors", compact ? "p-2.5" : "p-3.5", on ? "border-brand bg-brand-soft" : "border-line hover:border-brand/50")}
                 >
+                  <MaterialChip paper={x} className={cn("shrink-0 rounded-md shadow-sm ring-1 ring-black/5", compact ? "size-10" : "size-12")} />
+                  <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
                     <span className={cn("font-bold", compact && "text-sm")}>{x.name}</span>
                     {on && <Check size={16} className="shrink-0 text-brand" />}
@@ -257,11 +260,13 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
                     {x.finishes && <span className="rounded bg-white/70 px-1.5 py-0.5 ring-1 ring-line">후가공 {x.finishes.length}종</span>}
                     {x.factor !== 1 && <span className="rounded bg-white/70 px-1.5 py-0.5 ring-1 ring-line">{x.factor > 1 ? `+${Math.round((x.factor - 1) * 100)}%` : `${Math.round((x.factor - 1) * 100)}%`}</span>}
                   </span>
+                  </span>
                 </button>
               );
             };
             // 용지가 적으면 전부 펼치고, 많으면 추천만 먼저 보여준 뒤 분류별 전체 목록을 펼친다
-            if (p.papers.length <= 6) return <div className="grid gap-2 sm:grid-cols-2">{p.papers.map((x) => card(x, false))}</div>;
+            const preview = <div className="mt-4"><p className="mb-1.5 text-xs font-bold text-mute">선택한 {p.paperLabel} 재질 미리보기</p><MaterialPreview paper={paper} label={p.name} unit={p.art === "card" ? "card" : p.art === "cloth" || p.art === "xbanner" ? "banner" : "sheet"} /></div>;
+            if (p.papers.length <= 6) return <><div className="grid gap-2 sm:grid-cols-2">{p.papers.map((x) => card(x, false))}</div>{preview}</>;
             const groups = Array.from(new Set(p.papers.map((x) => x.group ?? "기타")));
             const short = p.papers.filter((x) => x.recommended || x.id === sel.paper);
             return (
@@ -285,6 +290,7 @@ export function ProductConfigurator({ product: p }: { product: Product }) {
                   {allPapers ? `추천 ${p.paperLabel}만 보기` : `전체 ${p.paperLabel} ${p.papers.length}종 보기`}
                   <ChevronDown size={16} className={cn("transition-transform", allPapers && "rotate-180")} />
                 </button>
+                {preview}
               </>
             );
           })()}

@@ -29,6 +29,25 @@ export interface Paper {
   group?: string;
   /** 접힌 상태에서도 먼저 보여줄 추천 용지 */
   recommended?: boolean;
+  /** 재질 미리보기용 겉모습 (화면 예시를 그리는 데 쓴다) */
+  feel?: Feel;
+}
+
+export type Texture = "smooth" | "grain" | "felt" | "linen" | "laid" | "kraft" | "pearl" | "metal" | "clear" | "holo" | "mesh" | "weave" | "velvet";
+
+export interface Feel {
+  /** 표면 무늬 */
+  tex: Texture;
+  /** 광택: 0 무광, 1 반광, 2 유광 */
+  gloss: 0 | 1 | 2;
+  /** 바탕색 */
+  tone: string;
+  /** 거칠기: 0 아주 매끈 ~ 3 거침 */
+  rough: 0 | 1 | 2 | 3;
+  /** 두께감 1~5 (생략하면 이름의 g 수치로 계산) */
+  thick?: 1 | 2 | 3 | 4 | 5;
+  /** 알아두면 좋은 특징 */
+  tags?: string[];
 }
 
 export interface Size {
@@ -167,31 +186,31 @@ const businessCard: Product = {
   allowSets: true,
   papers: [
     // 일반지
-    { id: "snow250", name: "스노우지 250g", desc: "매끈하고 선명한 기본 용지", factor: 1, group: "일반지", recommended: true },
-    { id: "snow300", name: "스노우지 300g", desc: "기본 용지를 더 도톰하게", factor: 1.1, group: "일반지" },
-    { id: "art250", name: "아트지 250g", desc: "광택이 있어 사진이 또렷해요", factor: 1, group: "일반지" },
-    { id: "art300", name: "아트지 300g", desc: "두꺼운 유광 용지", factor: 1.1, group: "일반지" },
-    { id: "mojo220", name: "모조지 220g", desc: "필기가 잘 되는 무광 용지", factor: 0.95, group: "일반지", finishes: ["round"] },
+    { id: "snow250", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfb", rough: 1, tags: ["가장 무난함", "색이 차분하게"] }, name: "스노우지 250g", desc: "매끈하고 선명한 기본 용지", factor: 1, group: "일반지", recommended: true },
+    { id: "snow300", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfb", rough: 1, tags: ["도톰함"] }, name: "스노우지 300g", desc: "기본 용지를 더 도톰하게", factor: 1.1, group: "일반지" },
+    { id: "art250", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, tags: ["사진이 선명", "지문이 보일 수 있음"] }, name: "아트지 250g", desc: "광택이 있어 사진이 또렷해요", factor: 1, group: "일반지" },
+    { id: "art300", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, tags: ["사진이 선명"] }, name: "아트지 300g", desc: "두꺼운 유광 용지", factor: 1.1, group: "일반지" },
+    { id: "mojo220", feel: { tex: "grain", gloss: 0, tone: "#fbfaf4", rough: 1, tags: ["볼펜 필기 가능", "색이 조금 연하게"] }, name: "모조지 220g", desc: "필기가 잘 되는 무광 용지", factor: 0.95, group: "일반지", finishes: ["round"] },
     // 고급지
-    { id: "vannouveau260", name: "반누보 화이트 260g", desc: "도톰하고 은은한 무광 질감", factor: 1.5, group: "고급지", recommended: true, sizes: ["std", "slim"], leadDays: 1 },
-    { id: "vannouveau320", name: "반누보 화이트 320g", desc: "묵직한 두께의 반누보", factor: 1.65, group: "고급지", sizes: ["std", "slim"], leadDays: 1 },
-    { id: "arte230", name: "아르떼 울트라화이트 230g", desc: "부드러운 엠보 질감의 고급지", factor: 1.35, group: "고급지", recommended: true, finishes: ["emboss", "round", "foil-gold", "foil-silver"] },
-    { id: "arte310", name: "아르떼 울트라화이트 310g", desc: "두꺼운 아르떼", factor: 1.55, group: "고급지", finishes: ["emboss", "round", "foil-gold", "foil-silver"] },
-    { id: "rendezvous240", name: "랑데뷰 내추럴 240g", desc: "따뜻한 미색, 매끄러운 무광", factor: 1.45, group: "고급지" },
-    { id: "montblanc240", name: "몽블랑 240g", desc: "밝은 백색에 잔잔한 결", factor: 1.4, group: "고급지" },
+    { id: "vannouveau260", feel: { tex: "felt", gloss: 0, tone: "#fbf9f3", rough: 2, tags: ["은은한 결", "고급 명함의 기본"] }, name: "반누보 화이트 260g", desc: "도톰하고 은은한 무광 질감", factor: 1.5, group: "고급지", recommended: true, sizes: ["std", "slim"], leadDays: 1 },
+    { id: "vannouveau320", feel: { tex: "felt", gloss: 0, tone: "#fbf9f3", rough: 2, tags: ["묵직한 두께"] }, name: "반누보 화이트 320g", desc: "묵직한 두께의 반누보", factor: 1.65, group: "고급지", sizes: ["std", "slim"], leadDays: 1 },
+    { id: "arte230", feel: { tex: "felt", gloss: 0, tone: "#ffffff", rough: 2, tags: ["부드러운 엠보", "밝은 백색"] }, name: "아르떼 울트라화이트 230g", desc: "부드러운 엠보 질감의 고급지", factor: 1.35, group: "고급지", recommended: true, finishes: ["emboss", "round", "foil-gold", "foil-silver"] },
+    { id: "arte310", feel: { tex: "felt", gloss: 0, tone: "#ffffff", rough: 2, tags: ["부드러운 엠보"] }, name: "아르떼 울트라화이트 310g", desc: "두꺼운 아르떼", factor: 1.55, group: "고급지", finishes: ["emboss", "round", "foil-gold", "foil-silver"] },
+    { id: "rendezvous240", feel: { tex: "grain", gloss: 0, tone: "#f8f3e8", rough: 1, tags: ["따뜻한 미색", "색이 깊게"] }, name: "랑데뷰 내추럴 240g", desc: "따뜻한 미색, 매끄러운 무광", factor: 1.45, group: "고급지" },
+    { id: "montblanc240", feel: { tex: "grain", gloss: 0, tone: "#ffffff", rough: 1, tags: ["잔잔한 결"] }, name: "몽블랑 240g", desc: "밝은 백색에 잔잔한 결", factor: 1.4, group: "고급지" },
     // 질감·수입지
-    { id: "linen216", name: "린넨커버 216g", desc: "천처럼 촘촘한 격자 무늬", factor: 1.6, group: "질감·수입지", finishes: ["emboss", "round", "foil-gold", "foil-silver"], leadDays: 1 },
-    { id: "tintoretto300", name: "띤또레또 300g", desc: "수채화지 같은 거친 결", factor: 1.75, group: "질감·수입지", finishes: ["emboss", "round", "foil-gold", "foil-silver"], leadDays: 1 },
-    { id: "marshmallow209", name: "매쉬멜로우 209g", desc: "아주 매끈하고 하얀 고급지", factor: 1.5, group: "질감·수입지", leadDays: 1 },
-    { id: "extramatt350", name: "엑스트라매트 350g", desc: "빛 반사가 거의 없는 두꺼운 무광", factor: 1.8, group: "질감·수입지", sizes: ["std", "slim"], leadDays: 1 },
-    { id: "stardream240", name: "스타드림 실버 240g", desc: "은은하게 반짝이는 펄지", factor: 1.7, group: "질감·수입지", finishes: ["round", "emboss"], leadDays: 1 },
-    { id: "popset240", name: "팝셋 펄화이트 240g", desc: "고운 펄이 도는 백색지", factor: 1.7, group: "질감·수입지", finishes: ["round", "emboss"], leadDays: 1 },
+    { id: "linen216", feel: { tex: "linen", gloss: 0, tone: "#faf8f2", rough: 2, tags: ["천 같은 격자 무늬"] }, name: "린넨커버 216g", desc: "천처럼 촘촘한 격자 무늬", factor: 1.6, group: "질감·수입지", finishes: ["emboss", "round", "foil-gold", "foil-silver"], leadDays: 1 },
+    { id: "tintoretto300", feel: { tex: "felt", gloss: 0, tone: "#fbf9f4", rough: 3, tags: ["수채화지 같은 거친 결"] }, name: "띤또레또 300g", desc: "수채화지 같은 거친 결", factor: 1.75, group: "질감·수입지", finishes: ["emboss", "round", "foil-gold", "foil-silver"], leadDays: 1 },
+    { id: "marshmallow209", feel: { tex: "smooth", gloss: 1, tone: "#ffffff", rough: 0, tags: ["아주 매끈", "선명한 발색"] }, name: "매쉬멜로우 209g", desc: "아주 매끈하고 하얀 고급지", factor: 1.5, group: "질감·수입지", leadDays: 1 },
+    { id: "extramatt350", feel: { tex: "grain", gloss: 0, tone: "#fafafa", rough: 1, tags: ["빛 반사 거의 없음", "두꺼움"] }, name: "엑스트라매트 350g", desc: "빛 반사가 거의 없는 두꺼운 무광", factor: 1.8, group: "질감·수입지", sizes: ["std", "slim"], leadDays: 1 },
+    { id: "stardream240", feel: { tex: "pearl", gloss: 1, tone: "#e6e8ec", rough: 0, tags: ["은빛 펄", "각도에 따라 반짝임"] }, name: "스타드림 실버 240g", desc: "은은하게 반짝이는 펄지", factor: 1.7, group: "질감·수입지", finishes: ["round", "emboss"], leadDays: 1 },
+    { id: "popset240", feel: { tex: "pearl", gloss: 1, tone: "#f7f4ee", rough: 0, tags: ["고운 펄"] }, name: "팝셋 펄화이트 240g", desc: "고운 펄이 도는 백색지", factor: 1.7, group: "질감·수입지", finishes: ["round", "emboss"], leadDays: 1 },
     // 특수지
-    { id: "kraft250", name: "크라프트 250g", desc: "자연스러운 갈색 재생지", factor: 1.25, group: "특수지", recommended: true, finishes: ["round"], sides: ["single", "double"] },
-    { id: "black380", name: "매트블랙 380g", desc: "검은 종이 · 화이트 인쇄 전용", factor: 1.9, group: "특수지", sizes: ["std", "slim"], sides: ["single-white", "double-white"], finishes: ["round", "foil-gold", "foil-silver"], leadDays: 2 },
-    { id: "yupo250", name: "유포지 250μ", desc: "찢어지지 않는 방수 합성지", factor: 1.7, group: "특수지", finishes: ["round"], sides: ["single", "double"], leadDays: 1 },
-    { id: "duo400", name: "듀오 화이트 400g", desc: "두 장을 합지한 아주 두꺼운 용지", factor: 1.9, group: "특수지", sizes: ["std", "slim"], finishes: ["foil-gold", "foil-silver", "emboss"], leadDays: 2 },
-    { id: "velvet350", name: "벨벳 화이트 350g", desc: "복숭아 껍질처럼 보드라운 촉감", factor: 1.75, group: "특수지", finishes: ["round", "foil-gold", "foil-silver"], leadDays: 1 },
+    { id: "kraft250", feel: { tex: "kraft", gloss: 0, tone: "#c59b6d", rough: 2, tags: ["갈색 바탕", "흰색·밝은 색은 표현 안 됨"] }, name: "크라프트 250g", desc: "자연스러운 갈색 재생지", factor: 1.25, group: "특수지", recommended: true, finishes: ["round"], sides: ["single", "double"] },
+    { id: "black380", feel: { tex: "grain", gloss: 0, tone: "#1c1c1c", rough: 1, tags: ["검은 종이", "화이트 인쇄 전용"] }, name: "매트블랙 380g", desc: "검은 종이 · 화이트 인쇄 전용", factor: 1.9, group: "특수지", sizes: ["std", "slim"], sides: ["single-white", "double-white"], finishes: ["round", "foil-gold", "foil-silver"], leadDays: 2 },
+    { id: "yupo250", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfd", rough: 0, thick: 4, tags: ["방수", "찢어지지 않음"] }, name: "유포지 250μ", desc: "찢어지지 않는 방수 합성지", factor: 1.7, group: "특수지", finishes: ["round"], sides: ["single", "double"], leadDays: 1 },
+    { id: "duo400", feel: { tex: "grain", gloss: 0, tone: "#ffffff", rough: 1, tags: ["아주 두꺼움", "잘 휘지 않음"] }, name: "듀오 화이트 400g", desc: "두 장을 합지한 아주 두꺼운 용지", factor: 1.9, group: "특수지", sizes: ["std", "slim"], finishes: ["foil-gold", "foil-silver", "emboss"], leadDays: 2 },
+    { id: "velvet350", feel: { tex: "velvet", gloss: 0, tone: "#fffdfa", rough: 1, tags: ["보드라운 촉감"] }, name: "벨벳 화이트 350g", desc: "복숭아 껍질처럼 보드라운 촉감", factor: 1.75, group: "특수지", finishes: ["round", "foil-gold", "foil-silver"], leadDays: 1 },
   ],
   sizes: [
     { id: "std", name: "표준형", w: 90, h: 50, factor: 1 },
@@ -270,20 +289,20 @@ const sticker: Product = {
   allowSets: true,
   papers: [
     // 종이
-    { id: "art", name: "아트지 스티커", desc: "가장 보편적인 광택 소재", factor: 1, group: "종이", recommended: true },
-    { id: "mojo", name: "모조지 스티커", desc: "빛 반사가 적은 무광 소재", factor: 0.95, group: "종이" },
-    { id: "art-strong", name: "아트지 초강접", desc: "거친 면에도 잘 붙는 강한 접착", factor: 1.15, group: "종이" },
-    { id: "removable", name: "리무버블 아트지", desc: "자국 없이 떼었다 붙일 수 있어요", factor: 1.25, group: "종이" },
-    { id: "kraft", name: "크라프트 스티커", desc: "내추럴한 갈색 소재", factor: 1.3, group: "종이", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["coat-matte", "dmsong"] },
+    { id: "art", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 2, tags: ["실내용", "물에 약함"] }, name: "아트지 스티커", desc: "가장 보편적인 광택 소재", factor: 1, group: "종이", recommended: true },
+    { id: "mojo", feel: { tex: "grain", gloss: 0, tone: "#fbfaf4", rough: 1, thick: 2, tags: ["볼펜 필기 가능", "물에 약함"] }, name: "모조지 스티커", desc: "빛 반사가 적은 무광 소재", factor: 0.95, group: "종이" },
+    { id: "art-strong", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 2, tags: ["강한 접착", "떼면 자국 남음"] }, name: "아트지 초강접", desc: "거친 면에도 잘 붙는 강한 접착", factor: 1.15, group: "종이" },
+    { id: "removable", feel: { tex: "smooth", gloss: 1, tone: "#ffffff", rough: 0, thick: 2, tags: ["자국 없이 떼어짐"] }, name: "리무버블 아트지", desc: "자국 없이 떼었다 붙일 수 있어요", factor: 1.25, group: "종이" },
+    { id: "kraft", feel: { tex: "kraft", gloss: 0, tone: "#c59b6d", rough: 2, thick: 2, tags: ["갈색 바탕", "흰색은 표현 안 됨"] }, name: "크라프트 스티커", desc: "내추럴한 갈색 소재", factor: 1.3, group: "종이", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["coat-matte", "dmsong"] },
     // 필름·방수
-    { id: "pet", name: "투명 PET", desc: "배경이 비치는 투명 소재 (코팅 불필요)", factor: 1.6, group: "필름·방수", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["white", "dmsong"], leadDays: 1 },
-    { id: "yupo", name: "유포지(방수)", desc: "물과 오염에 강한 합성지", factor: 1.8, group: "필름·방수", recommended: true, finishes: ["dmsong"], leadDays: 1 },
-    { id: "pvc-white", name: "백색 PVC", desc: "야외에서도 오래 가는 비닐 소재", factor: 1.9, group: "필름·방수", finishes: ["dmsong", "coat-gloss"], leadDays: 1 },
-    { id: "silver", name: "은무 데드롱", desc: "무광 은색 금속 느낌", factor: 2, group: "필름·방수", finishes: ["dmsong"], leadDays: 1 },
+    { id: "pet", feel: { tex: "clear", gloss: 2, tone: "#ffffff", rough: 0, thick: 2, tags: ["투명", "방수", "흰색은 화이트 인쇄 필요"] }, name: "투명 PET", desc: "배경이 비치는 투명 소재 (코팅 불필요)", factor: 1.6, group: "필름·방수", recommended: true, sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["white", "dmsong"], leadDays: 1 },
+    { id: "yupo", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfd", rough: 0, thick: 2, tags: ["방수", "찢어지지 않음"] }, name: "유포지(방수)", desc: "물과 오염에 강한 합성지", factor: 1.8, group: "필름·방수", recommended: true, finishes: ["dmsong"], leadDays: 1 },
+    { id: "pvc-white", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 3, tags: ["방수", "야외 사용"] }, name: "백색 PVC", desc: "야외에서도 오래 가는 비닐 소재", factor: 1.9, group: "필름·방수", finishes: ["dmsong", "coat-gloss"], leadDays: 1 },
+    { id: "silver", feel: { tex: "metal", gloss: 1, tone: "#c9ccd1", rough: 0, thick: 2, tags: ["무광 은색", "방수"] }, name: "은무 데드롱", desc: "무광 은색 금속 느낌", factor: 2, group: "필름·방수", finishes: ["dmsong"], leadDays: 1 },
     // 특수
-    { id: "holo-paper", name: "홀로그램 스티커지", desc: "소재 자체가 무지개빛으로 반짝여요", factor: 2.2, group: "특수", finishes: ["dmsong"], leadDays: 2 },
-    { id: "neon", name: "형광지 스티커", desc: "눈에 확 띄는 형광 바탕", factor: 1.4, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"] },
-    { id: "hanji", name: "한지 스티커", desc: "결이 살아 있는 전통 종이", factor: 1.7, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"], leadDays: 1 },
+    { id: "holo-paper", feel: { tex: "holo", gloss: 2, tone: "#e8ecf5", rough: 0, thick: 2, tags: ["무지개빛 반짝임"] }, name: "홀로그램 스티커지", desc: "소재 자체가 무지개빛으로 반짝여요", factor: 2.2, group: "특수", finishes: ["dmsong"], leadDays: 2 },
+    { id: "neon", feel: { tex: "smooth", gloss: 0, tone: "#f4ff5c", rough: 1, thick: 2, tags: ["형광 바탕", "실내용"] }, name: "형광지 스티커", desc: "눈에 확 띄는 형광 바탕", factor: 1.4, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"] },
+    { id: "hanji", feel: { tex: "laid", gloss: 0, tone: "#f6f1e4", rough: 3, thick: 2, tags: ["섬유 결이 보임", "전통 느낌"] }, name: "한지 스티커", desc: "결이 살아 있는 전통 종이", factor: 1.7, group: "특수", sizes: ["r50", "r70", "s50", "r90x60"], finishes: ["dmsong"], leadDays: 1 },
   ],
   sizes: [
     { id: "r50", name: "원형 50mm", w: 50, h: 50, factor: 1, shape: "round" },
@@ -351,23 +370,23 @@ const flyer: Product = {
   allowSets: true,
   papers: [
     // 일반지
-    { id: "art90", name: "아트지 90g", desc: "가볍고 경제적인 전단 용지", factor: 0.8, group: "일반지", finishes: ["miss"] },
-    { id: "art120", name: "아트지 120g", desc: "광택 있는 기본 전단 용지", factor: 0.95, group: "일반지", recommended: true },
-    { id: "art150", name: "아트지 150g", desc: "도톰한 유광, 사진이 선명해요", factor: 1.15, group: "일반지" },
-    { id: "art180", name: "아트지 180g", desc: "포스터·메뉴판에 맞는 두께", factor: 1.35, group: "일반지" },
-    { id: "snow100", name: "스노우지 100g", desc: "얇은 무광 용지", factor: 0.9, group: "일반지", finishes: ["fold2", "perforation"] },
-    { id: "snow120", name: "스노우지 120g", desc: "가장 많이 쓰는 균형 잡힌 용지", factor: 1, group: "일반지", recommended: true },
-    { id: "snow150", name: "스노우지 150g", desc: "도톰해서 리플렛에 적합", factor: 1.2, group: "일반지", recommended: true },
-    { id: "snow180", name: "스노우지 180g", desc: "두꺼운 무광, 고급 리플렛용", factor: 1.4, group: "일반지" },
-    { id: "mojo80", name: "모조지 80g", desc: "복사지 느낌, 필기가 잘 돼요", factor: 0.75, group: "일반지", finishes: ["perforation"] },
-    { id: "mojo100", name: "모조지 100g", desc: "신청서·설문지에 좋은 무광", factor: 0.85, group: "일반지", finishes: ["fold2", "perforation", "miss"] },
+    { id: "art90", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, tags: ["가볍고 저렴", "뒷면이 살짝 비침"] }, name: "아트지 90g", desc: "가볍고 경제적인 전단 용지", factor: 0.8, group: "일반지", finishes: ["miss"] },
+    { id: "art120", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, tags: ["광택", "사진이 선명"] }, name: "아트지 120g", desc: "광택 있는 기본 전단 용지", factor: 0.95, group: "일반지", recommended: true },
+    { id: "art150", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, tags: ["도톰한 광택"] }, name: "아트지 150g", desc: "도톰한 유광, 사진이 선명해요", factor: 1.15, group: "일반지" },
+    { id: "art180", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, tags: ["포스터 두께"] }, name: "아트지 180g", desc: "포스터·메뉴판에 맞는 두께", factor: 1.35, group: "일반지" },
+    { id: "snow100", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfb", rough: 1, tags: ["은은한 무광", "얇음"] }, name: "스노우지 100g", desc: "얇은 무광 용지", factor: 0.9, group: "일반지", finishes: ["fold2", "perforation"] },
+    { id: "snow120", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfb", rough: 1, tags: ["가장 무난함"] }, name: "스노우지 120g", desc: "가장 많이 쓰는 균형 잡힌 용지", factor: 1, group: "일반지", recommended: true },
+    { id: "snow150", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfb", rough: 1, tags: ["리플렛에 적합"] }, name: "스노우지 150g", desc: "도톰해서 리플렛에 적합", factor: 1.2, group: "일반지", recommended: true },
+    { id: "snow180", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfb", rough: 1, tags: ["두꺼운 무광"] }, name: "스노우지 180g", desc: "두꺼운 무광, 고급 리플렛용", factor: 1.4, group: "일반지" },
+    { id: "mojo80", feel: { tex: "grain", gloss: 0, tone: "#fbfaf4", rough: 1, tags: ["복사지 느낌", "필기 가능"] }, name: "모조지 80g", desc: "복사지 느낌, 필기가 잘 돼요", factor: 0.75, group: "일반지", finishes: ["perforation"] },
+    { id: "mojo100", feel: { tex: "grain", gloss: 0, tone: "#fbfaf4", rough: 1, tags: ["필기 가능"] }, name: "모조지 100g", desc: "신청서·설문지에 좋은 무광", factor: 0.85, group: "일반지", finishes: ["fold2", "perforation", "miss"] },
     // 고급지
-    { id: "rendezvous130", name: "랑데뷰 130g", desc: "색이 깊게 나오는 고급 무광", factor: 1.4, group: "고급지", leadDays: 1 },
-    { id: "rendezvous", name: "랑데뷰 190g", desc: "고급스러운 질감의 두꺼운 용지", factor: 1.6, group: "고급지", recommended: true, sizes: ["a4", "a5", "a6", "b5"], leadDays: 1 },
-    { id: "vannouveau150", name: "반누보 150g", desc: "은은한 결이 있는 수입지", factor: 1.7, group: "고급지", sizes: ["a4", "a5", "a6", "b5"], finishes: ["fold2", "fold3", "miss"], leadDays: 1 },
+    { id: "rendezvous130", feel: { tex: "grain", gloss: 0, tone: "#f8f3e8", rough: 1, tags: ["따뜻한 미색", "색이 깊게"] }, name: "랑데뷰 130g", desc: "색이 깊게 나오는 고급 무광", factor: 1.4, group: "고급지", leadDays: 1 },
+    { id: "rendezvous", feel: { tex: "grain", gloss: 0, tone: "#f8f3e8", rough: 1, tags: ["두껍고 고급스러움"] }, name: "랑데뷰 190g", desc: "고급스러운 질감의 두꺼운 용지", factor: 1.6, group: "고급지", recommended: true, sizes: ["a4", "a5", "a6", "b5"], leadDays: 1 },
+    { id: "vannouveau150", feel: { tex: "felt", gloss: 0, tone: "#fbf9f3", rough: 2, tags: ["은은한 결"] }, name: "반누보 150g", desc: "은은한 결이 있는 수입지", factor: 1.7, group: "고급지", sizes: ["a4", "a5", "a6", "b5"], finishes: ["fold2", "fold3", "miss"], leadDays: 1 },
     // 친환경·특수
-    { id: "recycled100", name: "재생지 100g", desc: "자연스러운 미색의 친환경 용지", factor: 1.05, group: "친환경·특수", finishes: ["fold2", "perforation"] },
-    { id: "kraft120", name: "크라프트 120g", desc: "갈색 재생지, 감성 전단용", factor: 1.3, group: "친환경·특수", sizes: ["a4", "a5", "a6", "b5"], finishes: ["fold2", "miss"], leadDays: 1 },
+    { id: "recycled100", feel: { tex: "laid", gloss: 0, tone: "#ebe5d5", rough: 2, tags: ["미색 재생지", "작은 티가 보임"] }, name: "재생지 100g", desc: "자연스러운 미색의 친환경 용지", factor: 1.05, group: "친환경·특수", finishes: ["fold2", "perforation"] },
+    { id: "kraft120", feel: { tex: "kraft", gloss: 0, tone: "#c59b6d", rough: 2, tags: ["갈색 바탕", "흰색은 표현 안 됨"] }, name: "크라프트 120g", desc: "갈색 재생지, 감성 전단용", factor: 1.3, group: "친환경·특수", sizes: ["a4", "a5", "a6", "b5"], finishes: ["fold2", "miss"], leadDays: 1 },
   ],
   sizes: [
     { id: "a3", name: "A3 (297×420)", w: 297, h: 420, factor: 1.9 },
@@ -440,16 +459,16 @@ const cloth: Product = {
   quantities: [1, 2, 3, 5, 10],
   papers: [
     // 일반
-    { id: "cloth", name: "일반 현수막천", desc: "가장 많이 쓰는 기본 원단", factor: 1, group: "일반", recommended: true },
-    { id: "solvent", name: "장기용 현수막천", desc: "색 바램이 적어 오래 걸어 둘 때", factor: 1.25, group: "일반", finishes: ["eyelet4", "eyelet-all", "rope", "sew", "windhole"] },
-    { id: "mesh", name: "메쉬(바람통과)", desc: "구멍 사이로 바람이 통하는 원단", factor: 1.3, group: "일반", recommended: true, finishes: ["eyelet4", "eyelet-all", "rope", "sew"], leadDays: 1 },
-    { id: "tarpaulin", name: "타포린(방수)", desc: "두껍고 질긴 방수 천막 소재", factor: 1.6, group: "일반", finishes: ["eyelet4", "eyelet-all", "sew"], leadDays: 1 },
+    { id: "cloth", feel: { tex: "weave", gloss: 1, tone: "#fcfcfa", rough: 1, thick: 2, tags: ["실내외 겸용", "단기 행사용"] }, name: "일반 현수막천", desc: "가장 많이 쓰는 기본 원단", factor: 1, group: "일반", recommended: true },
+    { id: "solvent", feel: { tex: "weave", gloss: 1, tone: "#fcfcfa", rough: 1, thick: 2, tags: ["색 바램 적음", "장기 게시"] }, name: "장기용 현수막천", desc: "색 바램이 적어 오래 걸어 둘 때", factor: 1.25, group: "일반", finishes: ["eyelet4", "eyelet-all", "rope", "sew", "windhole"] },
+    { id: "mesh", feel: { tex: "mesh", gloss: 0, tone: "#f4f4f2", rough: 2, thick: 2, tags: ["바람이 통함", "가까이서 보면 구멍이 보임"] }, name: "메쉬(바람통과)", desc: "구멍 사이로 바람이 통하는 원단", factor: 1.3, group: "일반", recommended: true, finishes: ["eyelet4", "eyelet-all", "rope", "sew"], leadDays: 1 },
+    { id: "tarpaulin", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 1, thick: 4, tags: ["방수", "두껍고 질김"] }, name: "타포린(방수)", desc: "두껍고 질긴 방수 천막 소재", factor: 1.6, group: "일반", finishes: ["eyelet4", "eyelet-all", "sew"], leadDays: 1 },
     // 고급
-    { id: "gloss", name: "프리미엄 광택천", desc: "색이 진하고 선명한 고급 원단", factor: 1.5, group: "고급", recommended: true, finishes: ["eyelet4", "eyelet-all", "rope", "sew", "windhole"], leadDays: 1 },
-    { id: "blackout", name: "암막 현수막천", desc: "뒤가 비치지 않아 양쪽에서 깔끔", factor: 1.7, group: "고급", finishes: ["eyelet4", "eyelet-all", "rope", "sew", "pole"], leadDays: 1 },
+    { id: "gloss", feel: { tex: "weave", gloss: 2, tone: "#ffffff", rough: 0, thick: 2, tags: ["진한 발색", "광택"] }, name: "프리미엄 광택천", desc: "색이 진하고 선명한 고급 원단", factor: 1.5, group: "고급", recommended: true, finishes: ["eyelet4", "eyelet-all", "rope", "sew", "windhole"], leadDays: 1 },
+    { id: "blackout", feel: { tex: "weave", gloss: 1, tone: "#fbfbf9", rough: 1, thick: 3, tags: ["뒤가 비치지 않음"] }, name: "암막 현수막천", desc: "뒤가 비치지 않아 양쪽에서 깔끔", factor: 1.7, group: "고급", finishes: ["eyelet4", "eyelet-all", "rope", "sew", "pole"], leadDays: 1 },
     // 실내·직물
-    { id: "fabric", name: "패브릭(섬유)", desc: "실내용, 주름이 적은 직물", factor: 1.9, group: "실내·직물", recommended: true, sizes: ["w300", "w500", "v90x180", "w400"], finishes: ["sew", "rope", "pole"], leadDays: 1 },
-    { id: "satin", name: "새틴(광택 직물)", desc: "은은한 광택의 행사·무대용", factor: 2.2, group: "실내·직물", sizes: ["w300", "v90x180", "w400"], finishes: ["sew", "pole"], leadDays: 2 },
+    { id: "fabric", feel: { tex: "weave", gloss: 0, tone: "#faf9f5", rough: 2, thick: 2, tags: ["주름이 적음", "실내용"] }, name: "패브릭(섬유)", desc: "실내용, 주름이 적은 직물", factor: 1.9, group: "실내·직물", recommended: true, sizes: ["w300", "w500", "v90x180", "w400"], finishes: ["sew", "rope", "pole"], leadDays: 1 },
+    { id: "satin", feel: { tex: "pearl", gloss: 2, tone: "#fbf8f1", rough: 0, thick: 2, tags: ["은은한 광택", "무대·행사용"] }, name: "새틴(광택 직물)", desc: "은은한 광택의 행사·무대용", factor: 2.2, group: "실내·직물", sizes: ["w300", "v90x180", "w400"], finishes: ["sew", "pole"], leadDays: 2 },
   ],
   sizes: [
     { id: "v90x180", name: "세로 0.9×1.8m", w: 900, h: 1800, factor: 1.62 },
@@ -516,15 +535,15 @@ const xbanner: Product = {
   quantities: [1, 2, 3, 5, 10, 20],
   papers: [
     // 기본
-    { id: "pp", name: "PP 합지", desc: "가장 보편적인 출력 소재", factor: 1, group: "기본", recommended: true },
-    { id: "pet", name: "PET 배너", desc: "말림이 적고 평평하게 펴져요", factor: 1.2, group: "기본", recommended: true },
-    { id: "pet-gray", name: "그레이백 PET", desc: "뒷면이 회색이라 빛이 비치지 않아요", factor: 1.35, group: "기본", sides: ["single"] },
+    { id: "pp", feel: { tex: "smooth", gloss: 1, tone: "#ffffff", rough: 0, thick: 2, tags: ["가장 무난함", "실내용"] }, name: "PP 합지", desc: "가장 보편적인 출력 소재", factor: 1, group: "기본", recommended: true },
+    { id: "pet", feel: { tex: "smooth", gloss: 2, tone: "#ffffff", rough: 0, thick: 3, tags: ["말림 적음", "평평하게 펴짐"] }, name: "PET 배너", desc: "말림이 적고 평평하게 펴져요", factor: 1.2, group: "기본", recommended: true },
+    { id: "pet-gray", feel: { tex: "smooth", gloss: 1, tone: "#f6f6f6", rough: 0, thick: 3, tags: ["빛이 비치지 않음"] }, name: "그레이백 PET", desc: "뒷면이 회색이라 빛이 비치지 않아요", factor: 1.35, group: "기본", sides: ["single"] },
     // 방염·야외
-    { id: "pvc", name: "방염 PVC", desc: "공공시설 규정에 맞는 방염 소재", factor: 1.35, group: "방염·야외", recommended: true, leadDays: 1, sides: ["single"] },
-    { id: "yupo", name: "방수 유포지", desc: "물에 강해 야외 행사에 적합", factor: 1.3, group: "방염·야외", sides: ["single"] },
+    { id: "pvc", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfd", rough: 1, thick: 3, tags: ["방염", "공공시설용"] }, name: "방염 PVC", desc: "공공시설 규정에 맞는 방염 소재", factor: 1.35, group: "방염·야외", recommended: true, leadDays: 1, sides: ["single"] },
+    { id: "yupo", feel: { tex: "smooth", gloss: 1, tone: "#fdfdfd", rough: 0, thick: 2, tags: ["방수", "야외 행사"] }, name: "방수 유포지", desc: "물에 강해 야외 행사에 적합", factor: 1.3, group: "방염·야외", sides: ["single"] },
     // 직물
-    { id: "fabric", name: "패브릭", desc: "접어도 주름이 적은 직물", factor: 1.7, group: "직물", recommended: true, sizes: ["x60", "x80", "roll85"], finishes: ["bag", "stand-premium"], leadDays: 1 },
-    { id: "canvas", name: "캔버스", desc: "그림 같은 질감의 두꺼운 직물", factor: 1.9, group: "직물", sizes: ["x60", "x80"], finishes: ["bag", "stand-premium"], sides: ["single"], leadDays: 2 },
+    { id: "fabric", feel: { tex: "weave", gloss: 0, tone: "#faf9f5", rough: 2, thick: 2, tags: ["주름이 적음", "접어서 운반"] }, name: "패브릭", desc: "접어도 주름이 적은 직물", factor: 1.7, group: "직물", recommended: true, sizes: ["x60", "x80", "roll85"], finishes: ["bag", "stand-premium"], leadDays: 1 },
+    { id: "canvas", feel: { tex: "weave", gloss: 0, tone: "#f5f1e6", rough: 3, thick: 4, tags: ["그림 같은 질감", "두꺼움"] }, name: "캔버스", desc: "그림 같은 질감의 두꺼운 직물", factor: 1.9, group: "직물", sizes: ["x60", "x80"], finishes: ["bag", "stand-premium"], sides: ["single"], leadDays: 2 },
   ],
   sizes: [
     { id: "x60", name: "X배너 60×160cm", w: 600, h: 1600, factor: 1 },
