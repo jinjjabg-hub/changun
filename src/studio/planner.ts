@@ -27,17 +27,18 @@ function rng(seed: number) {
   };
 }
 
-function rank(info: CardInfo, seed: number): Template[] {
+function rank(info: CardInfo, seed: number, shown: Set<string> = new Set()): { t: Template; score: number }[] {
   const rand = rng(seed + 1);
   return TEMPLATES.map((t) => {
     const industry = t.industries.indexOf(info.industry);
     let score = industry === 0 ? 5 : industry > 0 ? 3 : 0;
+    // 직전에 보여준 시안은 뒤로 미뤄 "다른 시안 보기"가 실제로 다른 시안을 내놓게 한다
+    if (shown.has(t.id)) score -= 4.5;
     if (info.mood !== "any" && t.moods.includes(info.mood)) score += 2.5;
     if (info.photo && (t.id === "education" || t.id === "medical")) score += 1.5;
     return { t, score: score + rand() * 2.2 };
   })
-    .sort((a, b) => b.score - a.score)
-    .map((x) => x.t);
+    .sort((a, b) => b.score - a.score);
 }
 
 function palettesFor(info: CardInfo, seed: number): string[] {
@@ -63,7 +64,7 @@ export function sanitizeSide(side: Side): Side {
   for (const el of side.elements) {
     switch (el.type) {
       case "text":
-        elements.push({ ...el, x: X(el.x), y: Y(el.y), size: clamp(el.size, 4, 40), color: color(el.color, "#111111"), tracking: el.tracking === undefined ? undefined : clamp(el.tracking, -0.05, 0.6) });
+        elements.push({ ...el, x: X(el.x), y: Y(el.y), size: clamp(el.size, 4, 80), color: color(el.color, "#111111"), tracking: el.tracking === undefined ? undefined : clamp(el.tracking, -0.05, 0.6) });
         break;
       case "rect":
         elements.push({ ...el, x: X(el.x), y: Y(el.y), w: clamp(el.w, 0.1, CARD.w + B * 2), h: clamp(el.h, 0.1, CARD.h + B * 2), fill: color(el.fill, "#111111") });
@@ -88,17 +89,52 @@ export function sanitizeSide(side: Side): Side {
   return { bg: color(side.bg, "#ffffff") === "none" ? "#ffffff" : color(side.bg, "#ffffff"), elements };
 }
 
-export function buildDesign(templateId: string, paletteId: string, info: CardInfo, id: string): Design | null {
+/** 좌우를 뒤집은 면 (같은 템플릿으로 다른 인상의 시안을 만든다) */
+export function mirrorSide(side: Side): Side {
+  const W = CARD.w;
+  const flipAlign = (a: "left" | "center" | "right") => (a === "left" ? "right" : a === "right" ? "left" : a);
+  return {
+    bg: side.bg,
+    elements: side.elements.map((el): El => {
+      switch (el.type) {
+        case "text": return { ...el, x: W - el.x, align: flipAlign(el.align) };
+        case "rect": return { ...el, x: W - el.x - el.w };
+        case "image": return { ...el, x: W - el.x - el.w };
+        case "qr": return { ...el, x: W - el.x - el.size };
+        case "circle": return { ...el, cx: W - el.cx };
+        case "line": return { ...el, x1: W - el.x1, x2: W - el.x2 };
+        case "poly": return { ...el, points: el.points.map(([x, y]) => [W - x, y] as [number, number]) };
+      }
+    }),
+  };
+}
+
+export function buildDesign(templateId: string, paletteId: string, info: CardInfo, id: string, mirror = false): Design | null {
   const t = TEMPLATES.find((x) => x.id === templateId);
   if (!t) return null;
   const pal = paletteById(paletteId);
   const { front, back } = t.build({ info, pal });
-  return { id, templateId: t.id, templateName: t.name, concept: t.concept, palette: pal, front: sanitizeSide(front), back: sanitizeSide(back) };
+  const f = mirror && t.mirror ? mirrorSide(front) : front;
+  return { id, templateId: t.id, templateName: t.name, concept: t.concept, palette: pal, front: sanitizeSide(f), back: sanitizeSide(back) };
+}
+
+/** 같은 배치 계열이 겹치지 않게 4종을 고른다 (모자라면 순위대로 채움) */
+function pickFour(info: CardInfo, seed: number, shown?: Set<string>): Template[] {
+  const ranked = rank(info, seed, shown);
+  const top = ranked[0]?.score ?? 0;
+  const picked: Template[] = [];
+  // 1) 충분히 어울리는 것 중에서 배치 계열이 겹치지 않게
+  for (const { t, score } of ranked) if (picked.length < 4 && score >= top - 3.5 && !picked.some((p) => p.family === t.family)) picked.push(t);
+  // 2) 모자라면 점수 순으로 채움
+  for (const { t } of ranked) if (picked.length < 4 && !picked.includes(t)) picked.push(t);
+  return picked;
 }
 
 /** 서로 다른 레이아웃의 시안 4종 */
 export async function planDesigns({ info, seed }: PlanRequest): Promise<Design[]> {
-  const templates = rank(info, seed).slice(0, 4);
+  const prev = seed > 1 ? new Set(pickFour(info, seed - 1).map((t) => t.id)) : new Set<string>();
+  const picked = pickFour(info, seed, prev);
   const pals = palettesFor(info, seed);
-  return templates.map((t, i) => buildDesign(t.id, pals[i], info, `d${seed}-${i}-${t.id}`)!);
+  const rand = rng(seed + 7);
+  return picked.map((t, i) => buildDesign(t.id, pals[i], info, `d${seed}-${i}-${t.id}`, rand() < 0.4)!);
 }

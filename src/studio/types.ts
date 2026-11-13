@@ -58,6 +58,8 @@ export interface TextEl extends Base {
   upper?: boolean;
   /** 이 너비(mm)를 넘으면 글자 크기를 자동으로 줄인다 */
   maxW?: number;
+  /** 연결된 정보의 첫 글자만 (모노그램) */
+  initial?: boolean;
 }
 
 export interface RectEl extends Base {
@@ -166,7 +168,8 @@ export const sampleInfo: CardInfo = {
 };
 
 export function resolveText(el: TextEl, info: CardInfo): string {
-  const raw = el.bind ? info[el.bind].trim() : (el.text ?? "");
+  const full = el.bind ? info[el.bind].trim() : (el.text ?? "");
+  const raw = el.initial ? (Array.from(full.replace(/^\(?(주|유)\)?\s*|^주식회사\s*/, ""))[0] ?? "") : full;
   if (!raw) return "";
   const s = `${el.prefix ?? ""}${raw}`;
   return el.upper ? s.toUpperCase() : s;

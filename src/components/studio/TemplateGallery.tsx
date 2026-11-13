@@ -8,21 +8,22 @@ import { buildDesign } from "@/studio/planner";
 import { TEMPLATES } from "@/studio/templates";
 import { sampleInfo } from "@/studio/types";
 
-/** 템플릿 12종을 예시 정보로 한눈에 보여주는 페이지 */
+/** 템플릿 전체를 예시 정보로 한눈에 보여주는 페이지 */
 export function TemplateGallery() {
   const fonts = useStudioFonts();
   return (
     <div className="mx-auto max-w-[1180px] px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-extrabold tracking-tight">템플릿 12종</h1>
+          <h1 className="text-[28px] font-extrabold tracking-tight">템플릿 {TEMPLATES.length}종</h1>
           <p className="text-sm text-mute">예시 정보로 그린 앞면과 뒷면입니다. 스튜디오에서는 업종과 취향에 맞는 4종을 골라 드려요.</p>
         </div>
         <Link href="/studio" className="inline-flex h-10 items-center rounded-full bg-brand px-5 text-sm font-bold text-white hover:bg-brand-dark">내 명함 만들기 →</Link>
       </div>
       <ul className="mt-6 grid gap-6 md:grid-cols-2">
-        {TEMPLATES.map((t) => {
-          const pal = INDUSTRIES.find((i) => i.id === t.industries[0])?.palettes[0] ?? "navy";
+        {TEMPLATES.map((t, n) => {
+          const list = INDUSTRIES.find((i) => i.id === t.industries[0])?.palettes ?? ["navy"];
+          const pal = list[n % list.length];
           const d = buildDesign(t.id, pal, sampleInfo, t.id)!;
           return (
             <li key={t.id} className="rounded-2xl bg-surface p-4">

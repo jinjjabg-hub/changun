@@ -208,7 +208,7 @@ export function Editor({ design, info, fonts, focus, onDesign, onInfo }: {
                     <input className={cn(num, "mt-0.5 text-ink")} value={el.bind ? info[el.bind] : (el.text ?? "")} onChange={(e) => (el.bind ? onInfo({ ...info, [el.bind]: e.target.value }) : patch(el.id, { text: e.target.value, label: e.target.value || "글자" }))} />
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Num label="크기 (pt)" value={el.size} step={0.5} min={4} max={40} onChange={(size) => patch(el.id, { size: Math.min(40, Math.max(4, size)) })} />
+                    <Num label="크기 (pt)" value={el.size} step={0.5} min={4} max={80} onChange={(size) => patch(el.id, { size: Math.min(80, Math.max(4, size)) })} />
                     <label className="block text-xs font-semibold text-mute">
                       굵기
                       <select className={cn(num, "mt-0.5 text-ink")} value={el.weight} onChange={(e) => patch(el.id, { weight: Number(e.target.value) as Weight })}>

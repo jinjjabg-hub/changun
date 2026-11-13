@@ -31,7 +31,11 @@ function Studio() {
   const [info, setInfo] = useState<CardInfo>(saved?.info ?? emptyInfo);
   const [step, setStep] = useState(saved?.step ?? 0);
   const [sub, setSub] = useState(0);
-  const [seed, setSeed] = useState(saved?.seed ?? 1);
+  // 시안 번호는 업종·분위기·색 취향별로 센다. 취향을 바꾸면 가장 잘 맞는 시안부터 다시 보여준다
+  const tasteKey = `${info.industry}|${info.mood}|${info.color}`;
+  const [seedFor, setSeedFor] = useState<{ key: string; n: number }>(() => ({ key: saved ? `${saved.info.industry}|${saved.info.mood}|${saved.info.color}` : "", n: saved?.seed ?? 1 }));
+  const seed = seedFor.key === tasteKey ? seedFor.n : 1;
+  const setSeed = (f: (n: number) => number) => setSeedFor({ key: tasteKey, n: f(seed) });
   const [design, setDesign] = useState<Design | null>(saved?.design ?? null);
   const [options, setOptions] = useState<Design[]>([]);
   const [focus, setFocus] = useState<{ side: SideKey; id: string } | null>(null);
@@ -67,7 +71,7 @@ function Studio() {
     setInfo(emptyInfo);
     setDesign(null);
     setOptions([]);
-    setSeed(1);
+    setSeedFor({ key: "", n: 1 });
     setPaper(undefined);
     setSub(0);
     setStep(0);
@@ -84,7 +88,7 @@ function Studio() {
         </div>
         <div className="flex items-center gap-3 text-xs text-mute">
           <span>이 브라우저에 자동 저장</span>
-          <Link href="/studio/gallery" className="underline hover:text-brand">템플릿 12종 보기</Link>
+          <Link href="/studio/gallery" className="underline hover:text-brand">템플릿 {TEMPLATES.length}종 보기</Link>
           <button type="button" onClick={reset} className="flex items-center gap-1 underline hover:text-danger"><RotateCcw size={12} /> 처음부터</button>
         </div>
       </div>
@@ -137,7 +141,7 @@ function Studio() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-xs text-mute">※ 시연 단계에서는 AI 호출 없이, 검증된 템플릿 12종 가운데 조건에 맞는 4종을 골라 색과 구성을 맞춥니다.</p>
+          <p className="mt-4 text-xs text-mute">※ 시연 단계에서는 AI 호출 없이, 템플릿 {TEMPLATES.length}종 가운데 조건에 맞는 4종을 골라 색과 구성을 맞춥니다.</p>
         </div>
       )}
 
