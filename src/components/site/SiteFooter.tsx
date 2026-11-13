@@ -20,6 +20,7 @@ export function SiteFooter() {
           <p className="mb-3 text-sm font-bold text-white">바로가기</p>
           <ul className="space-y-2 text-sm">
             <li><Link href="/products" className="hover:text-white hover:underline">전체 상품</Link></li>
+            <li><Link href="/studio" className="hover:text-white hover:underline">명함 스튜디오</Link></li>
             <li><Link href="/cart" className="hover:text-white hover:underline">장바구니</Link></li>
             <li><Link href="/products/business-card" className="hover:text-white hover:underline">명함 주문</Link></li>
             <li><Link href="/products/sticker" className="hover:text-white hover:underline">스티커 주문</Link></li>

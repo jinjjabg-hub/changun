@@ -123,6 +123,7 @@ export function SiteHeader() {
             );
           })}
           <Link href="/products" className="h-[50px] px-4 text-[15px] leading-[50px] text-mute hover:text-brand">전체 상품</Link>
+          <Link href="/studio" className="flex h-[50px] items-center gap-1.5 px-4 text-[15px] font-bold text-brand hover:text-brand-dark">명함 스튜디오<span className="rounded bg-accent px-1 text-[10px] font-extrabold text-ink">NEW</span></Link>
           <span className="ml-auto text-xs text-mute">평일 15시까지 접수 시 당일 제작 시작</span>
         </div>
       </nav>
@@ -177,6 +178,7 @@ export function SiteHeader() {
               <SearchBox />
             </Suspense>
           </div>
+          <Link href="/studio" className="mb-4 block rounded-xl bg-brand-soft px-3 py-2.5 font-extrabold text-brand-dark">명함 스튜디오 · 정보만 넣으면 인쇄 파일까지 →</Link>
           {categories.map((c) => (
             <div key={c.id} className="mb-4">
               <p className="mb-1 font-extrabold text-brand-dark">{c.name}</p>
