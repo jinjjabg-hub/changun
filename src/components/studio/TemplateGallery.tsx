@@ -7,10 +7,15 @@ import { INDUSTRIES } from "@/studio/palettes";
 import { buildDesign } from "@/studio/planner";
 import { TEMPLATES } from "@/studio/templates";
 import { sampleInfo } from "@/studio/types";
+import { fontNeeds } from "@/studio/fonts";
 
 /** 템플릿 전체를 예시 정보로 한눈에 보여주는 페이지 */
 export function TemplateGallery() {
-  const fonts = useStudioFonts();
+  const designs = TEMPLATES.map((t, n) => {
+    const list = INDUSTRIES.find((i) => i.id === t.industries[0])?.palettes ?? ["navy"];
+    return buildDesign(t.id, list[n % list.length], sampleInfo, t.id)!;
+  });
+  const fonts = useStudioFonts(fontNeeds(designs.flatMap((d) => [d.front, d.back])));
   return (
     <div className="mx-auto max-w-[1180px] px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -22,9 +27,7 @@ export function TemplateGallery() {
       </div>
       <ul className="mt-6 grid gap-6 md:grid-cols-2">
         {TEMPLATES.map((t, n) => {
-          const list = INDUSTRIES.find((i) => i.id === t.industries[0])?.palettes ?? ["navy"];
-          const pal = list[n % list.length];
-          const d = buildDesign(t.id, pal, sampleInfo, t.id)!;
+          const d = designs[n];
           return (
             <li key={t.id} className="rounded-2xl bg-surface p-4">
               <div className="grid grid-cols-2 gap-3">

@@ -1,5 +1,5 @@
 import type { Paper } from "@/data/catalog";
-import type { FontSet } from "./fonts";
+import { familyOf, fontNeeds, type FontSet } from "./fonts";
 import { boxOf, layoutText } from "./geometry";
 import { qrPath } from "./qr";
 import { CARD, PT_MM, type CardInfo, type Design, type SideKey } from "./types";
@@ -40,7 +40,8 @@ export function preflight(design: Design, info: CardInfo, fonts: FontSet | null,
   out.push({ id: "bleed", level: "pass", title: "도련", detail: `배경색이 사방 ${CARD.bleed}mm 도련까지 채워집니다` });
 
   if (!info.name.trim()) out.push({ id: "name", level: "fail", title: "이름 없음", detail: "이름이 비어 있어요. 정보 입력 단계에서 채워 주세요." });
-  if (!fonts) out.push({ id: "fonts", level: "warn", title: "글꼴 불러오는 중", detail: "글꼴 파일을 아직 받지 못해 글자 폭을 어림값으로 검사했어요." });
+  const missing = fontNeeds([design.front, design.back]).filter((n) => !fonts?.has(n.family, n.weight));
+  if (missing.length) out.push({ id: "fonts", level: "warn", title: "글꼴 불러오는 중", detail: `${Array.from(new Set(missing.map((m) => familyOf(m.family).name))).join(", ")} 글꼴 파일을 아직 받지 못해 글자 폭을 어림값으로 검사했어요.` });
 
   for (const key of ["front", "back"] as SideKey[]) {
     const side = design[key];
@@ -61,6 +62,7 @@ export function preflight(design: Design, info: CardInfo, fonts: FontSet | null,
         else if (outSafe) out.push({ id: `safe-${el.id}`, level: "warn", title: `${name} 안전 영역 벗어남`, detail: `‘${t.text}’가 재단선에서 ${S}mm 안쪽 영역을 벗어났어요. 재단 오차로 잘릴 수 있어요.`, target });
 
         const pt = t.sizeMm / PT_MM;
+        if (el.font === "pen" && pt < 8) out.push({ id: `pen-${el.id}`, level: "warn", title: `${name} 손글씨가 작음`, detail: `‘${t.text}’는 손글씨 글꼴이라 ${pt.toFixed(1)}pt에서는 읽기 어려워요. 9pt 이상을 권장해요.`, target });
         if (pt < 4.5) out.push({ id: `tiny-${el.id}`, level: "fail", title: `${name} 글자가 너무 작음`, detail: `‘${t.text}’가 ${pt.toFixed(1)}pt 입니다. 4.5pt 미만은 인쇄하면 읽기 어렵습니다.`, target });
         else if (pt < 5.5) out.push({ id: `small-${el.id}`, level: "warn", title: `${name} 작은 글자`, detail: `‘${t.text}’가 ${pt.toFixed(1)}pt 입니다. 6pt 이상을 권장해요.`, target });
         if (el.maxW && t.width > el.maxW + 0.3) out.push({ id: `long-${el.id}`, level: "warn", title: `${name} 글자가 길어 넘침`, detail: `‘${t.text}’가 정해진 폭을 넘어 다른 요소와 겹칠 수 있어요.`, target });
@@ -115,7 +117,7 @@ export function preflight(design: Design, info: CardInfo, fonts: FontSet | null,
     }
   }
 
-  out.push({ id: "text-outline", level: "pass", title: "글꼴", detail: "PDF의 글자는 모두 윤곽선(벡터 도형)으로 바뀌어 글꼴 누락이 생기지 않습니다" });
+  out.push({ id: "text-outline", level: "pass", title: "글꼴", detail: `PDF의 글자는 모두 윤곽선(벡터 도형)으로 바뀌어 글꼴 누락이 생기지 않습니다 (사용 글꼴: ${Array.from(new Set(fontNeeds([design.front, design.back]).map((n) => familyOf(n.family).name))).join(", ")})` });
   out.push({ id: "color", level: "warn", title: "색상", detail: "글자와 도형은 CMYK 값으로 저장하지만, 화면색을 계산식으로 바꾼 값이라 실제 인쇄 색과 차이가 날 수 있어요. 실물 샘플로 확인해 주세요." });
   return out;
 }

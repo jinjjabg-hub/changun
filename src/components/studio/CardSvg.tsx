@@ -1,6 +1,6 @@
 "use client";
 
-import { FONT_FAMILY, type FontSet } from "@/studio/fonts";
+import { cssFamily, type FontSet } from "@/studio/fonts";
 import { boxOf, layoutText } from "@/studio/geometry";
 import { qrPath } from "@/studio/qr";
 import { CARD, type CardInfo, type El, type Side } from "@/studio/types";
@@ -25,7 +25,7 @@ function Element({ el, info, fonts }: { el: El; info: CardInfo; fonts: FontSet |
       const t = layoutText(el, info, fonts);
       if (!t.text) return null;
       return (
-        <text x={t.left} y={el.y} fontFamily={`"${FONT_FAMILY}", sans-serif`} fontWeight={el.weight} fontSize={t.sizeMm} letterSpacing={el.tracking ? el.tracking * t.sizeMm : undefined} fill={el.color} style={{ whiteSpace: "pre" }}>
+        <text x={t.left} y={el.y} fontFamily={cssFamily(el.font)} fontWeight={el.weight} fontSize={t.sizeMm} letterSpacing={el.tracking ? el.tracking * t.sizeMm : undefined} fill={el.color} style={{ whiteSpace: "pre" }}>
           {t.text}
         </text>
       );

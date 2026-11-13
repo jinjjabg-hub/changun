@@ -14,6 +14,7 @@ import { Editor } from "./Editor";
 import { Finish } from "./Finish";
 import { InfoForm, validateInfo } from "./InfoForm";
 import { useStudioFonts } from "./useStudioFonts";
+import { fontNeeds } from "@/studio/fonts";
 
 const STEPS = ["정보 입력", "시안 선택", "편집", "검사 · 내려받기"];
 
@@ -25,7 +26,6 @@ function previewDesign(info: CardInfo): Design {
 }
 
 function Studio() {
-  const fonts = useStudioFonts();
   // 저장된 작업이 있으면 이어서 시작한다 (이 컴포넌트는 브라우저에서만 만들어진다)
   const [saved] = useState(loadSaved);
   const [info, setInfo] = useState<CardInfo>(saved?.info ?? emptyInfo);
@@ -56,6 +56,10 @@ function Studio() {
       alive = false;
     };
   }, [step, info, seed]);
+
+  // 화면에 나온 디자인들에 쓰인 글꼴만 받는다
+  const shown = step === 0 ? [previewDesign(info)] : step === 1 ? options : design ? [design] : [];
+  const fonts = useStudioFonts(fontNeeds(shown.flatMap((d) => [d.front, d.back])));
 
   const infoOk = Object.keys(validateInfo(info)).length === 0;
   const canGo = (i: number) => i === 0 || (infoOk && (i === 1 || design !== null));

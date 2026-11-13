@@ -1,6 +1,6 @@
 import { loadImage } from "@/lib/imageFile";
 import { downloadBytes } from "@/lib/printPdf";
-import { FONT_FAMILY, type FontSet } from "./fonts";
+import { familyOf, fontNeeds, loadFonts, type FontSet } from "./fonts";
 import { layoutText } from "./geometry";
 import { paintSide, type MapFn, type Paint } from "./paint";
 import { CARD, type CardInfo, type Design, type ImageEl, type Side, type SideKey } from "./types";
@@ -82,7 +82,8 @@ const paintToSvg = (p: Paint, images: Map<string, Prepared>) => {
  *  - outline=false: 글자가 <text> 로 남아 일러스트레이터 등에서 고칠 수 있다 (Pretendard 글꼴 필요)
  *  - outline=true : 글자가 윤곽선으로 바뀌어 어디서 열어도 모양이 같다
  */
-export async function sideToSvg(side: Side, info: CardInfo, fonts: FontSet, outline: boolean): Promise<string> {
+export async function sideToSvg(side: Side, info: CardInfo, _fonts: FontSet, outline: boolean): Promise<string> {
+  const fonts = await loadFonts(fontNeeds([side]));
   const images = await prepareAll(side, info);
   const B = CARD.bleed;
   const id: MapFn = (x, y) => [x, y];
@@ -95,7 +96,7 @@ export async function sideToSvg(side: Side, info: CardInfo, fonts: FontSet, outl
         const t = layoutText(el, info, fonts);
         if (!t.text) continue;
         const spacing = el.tracking ? ` letter-spacing="${f(el.tracking * t.sizeMm)}"` : "";
-        body += `  <text id="${esc(el.id)}" x="${f(t.left)}" y="${f(el.y)}" font-family="Pretendard, '${FONT_FAMILY}', sans-serif" font-weight="${el.weight}" font-size="${f(t.sizeMm)}"${spacing} fill="${el.color}" xml:space="preserve">${esc(t.text)}</text>\n`;
+        body += `  <text id="${esc(el.id)}" x="${f(t.left)}" y="${f(el.y)}" font-family="'${familyOf(el.font).realName}', Pretendard, sans-serif" font-weight="${el.weight}" font-size="${f(t.sizeMm)}"${spacing} fill="${el.color}" xml:space="preserve">${esc(t.text)}</text>\n`;
       } else {
         for (const p of paintSide({ bg: side.bg, elements: [el] }, info, fonts, id, 1)) body += paintToSvg(p, images);
       }
@@ -117,7 +118,9 @@ export function hexToCmyk(hex: string): [number, number, number, number] {
   return [(1 - r - k) / (1 - k), (1 - g - k) / (1 - k), (1 - b - k) / (1 - k), k];
 }
 
-export async function designToPdf(design: Design, info: CardInfo, fonts: FontSet, sidesToPrint: SideKey[], paperName?: string): Promise<Uint8Array> {
+export async function designToPdf(design: Design, info: CardInfo, _fonts: FontSet, sidesToPrint: SideKey[], paperName?: string): Promise<Uint8Array> {
+  // 디자인에 쓰인 글꼴을 모두 받은 뒤 윤곽선으로 바꾼다
+  const fonts = await loadFonts(fontNeeds([design.front, design.back]));
   const { PDFDocument, cmyk, pushGraphicsState, popGraphicsState, rectangle, clip, endPath } = await import("pdf-lib");
   const doc = await PDFDocument.create();
   doc.setTitle(`${info.name || "명함"} 명함 ${CARD.w}×${CARD.h}mm`);

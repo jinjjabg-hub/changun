@@ -21,7 +21,7 @@ export interface TextLayout {
 export function layoutText(el: TextEl, info: CardInfo, fonts: FontSet | null): TextLayout {
   const text = resolveText(el, info);
   let sizeMm = el.size * PT_MM;
-  let width = textWidth(fonts, text, sizeMm, el.weight, el.tracking);
+  let width = textWidth(fonts, el.font, text, sizeMm, el.weight, el.tracking);
   if (el.maxW && width > el.maxW) {
     // 최소 60%까지만 줄인다. 그래도 넘치면 인쇄 검사에서 경고한다
     const k = Math.max(0.6, el.maxW / width);

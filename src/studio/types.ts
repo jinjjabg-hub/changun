@@ -60,6 +60,8 @@ export interface TextEl extends Base {
   maxW?: number;
   /** 연결된 정보의 첫 글자만 (모노그램) */
   initial?: boolean;
+  /** 글꼴 (fonts.ts 의 FamilyId, 생략 = 프리텐다드) */
+  font?: string;
 }
 
 export interface RectEl extends Base {

@@ -102,7 +102,7 @@ export function Finish({ design, info, fonts, paperId, onPaper, onFix }: { desig
             <button type="button" disabled={blocked || !!busy} onClick={() => pdf(["front"], "front")} className={cn(btn, "border-2 border-brand text-brand hover:bg-brand-soft")}>{busy === "pdf-front" ? "만드는 중…" : "PDF · 앞면만 (단면 명함)"}</button>
           </div>
 
-          <p className="mb-1.5 mt-5 text-xs font-bold text-mute">편집용 SVG (글자를 고칠 수 있음 · Pretendard 글꼴 필요)</p>
+          <p className="mb-1.5 mt-5 text-xs font-bold text-mute">편집용 SVG (글자를 고칠 수 있음 · 사용한 글꼴이 설치돼 있어야 함)</p>
           <div className="grid grid-cols-2 gap-2">
             <button type="button" disabled={blocked || !!busy} onClick={() => svg("front", false)} className={cn(btn, "border-2 border-line hover:border-brand/50")}>SVG 앞면</button>
             <button type="button" disabled={blocked || !!busy} onClick={() => svg("back", false)} className={cn(btn, "border-2 border-line hover:border-brand/50")}>SVG 뒷면</button>

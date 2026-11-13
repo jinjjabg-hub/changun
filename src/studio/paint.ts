@@ -1,4 +1,4 @@
-import type { FontSet } from "./fonts";
+import { runsOf, type FontSet } from "./fonts";
 import { layoutText } from "./geometry";
 import { qrPath } from "./qr";
 import type { CardInfo, ImageEl, Side, TextEl } from "./types";
@@ -42,25 +42,29 @@ function roundRect(x: number, y: number, w: number, h: number, r: number, map: M
   );
 }
 
-/** 글자를 윤곽선 경로로. 자간이 있으면 글자마다 따로 배치한다. */
+/** 글자를 윤곽선 경로로. 글꼴에 없는 글자는 프리텐다드로, 자간이 있으면 글자마다 따로 배치한다. */
 export function textOutline(el: TextEl, info: CardInfo, fonts: FontSet, map: MapFn): string {
   const t = layoutText(el, info, fonts);
   if (!t.text) return "";
-  const font = fonts[el.weight];
-  const pieces: { text: string; x: number }[] = [];
-  if (el.tracking) {
-    let x = t.left;
-    for (const ch of t.text) {
-      pieces.push({ text: ch, x });
-      x += font.getAdvanceWidth(ch, t.sizeMm) + el.tracking * t.sizeMm;
+  const runs = runsOf(fonts, el.font, el.weight, t.text);
+  if (!runs) return "";
+  const pieces: { text: string; x: number; font: (typeof runs)[number]["font"] }[] = [];
+  let x = t.left;
+  for (const r of runs) {
+    if (el.tracking) {
+      for (const ch of r.text) {
+        pieces.push({ text: ch, x, font: r.font });
+        x += r.font.getAdvanceWidth(ch, t.sizeMm) + el.tracking * t.sizeMm;
+      }
+    } else {
+      pieces.push({ text: r.text, x, font: r.font });
+      x += r.font.getAdvanceWidth(r.text, t.sizeMm);
     }
-  } else {
-    pieces.push({ text: t.text, x: t.left });
   }
   let d = "";
-  const p = (x: number, y: number) => map(x, y).map(n).join(" ");
+  const p = (px: number, py: number) => map(px, py).map(n).join(" ");
   for (const piece of pieces) {
-    for (const c of font.getPath(piece.text, piece.x, el.y, t.sizeMm).commands) {
+    for (const c of piece.font.getPath(piece.text, piece.x, el.y, t.sizeMm).commands) {
       if (c.type === "M") d += `M${p(c.x, c.y)}`;
       else if (c.type === "L") d += `L${p(c.x, c.y)}`;
       else if (c.type === "C") d += `C${p(c.x1, c.y1)} ${p(c.x2, c.y2)} ${p(c.x, c.y)}`;

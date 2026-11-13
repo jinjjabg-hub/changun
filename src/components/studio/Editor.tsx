@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { AlignCenter, AlignLeft, AlignRight, ArrowDown, ArrowUp, Circle, Minus, Redo2, Square, Trash2, Type, Undo2 } from "lucide-react";
-import { WEIGHTS, type FontSet } from "@/studio/fonts";
+import { FAMILIES, WEIGHTS, cssFamily, familyOf, resolveWeight, type FontSet } from "@/studio/fonts";
 import { boxOf, moved } from "@/studio/geometry";
 import { PALETTES } from "@/studio/palettes";
 import { recolor } from "@/studio/store";
@@ -207,12 +207,26 @@ export function Editor({ design, info, fonts, focus, onDesign, onInfo }: {
                     내용 {el.bind && <span className="font-normal text-brand">· 고객 정보와 연결됨 (앞뒤 함께 바뀜)</span>}
                     <input className={cn(num, "mt-0.5 text-ink")} value={el.bind ? info[el.bind] : (el.text ?? "")} onChange={(e) => (el.bind ? onInfo({ ...info, [el.bind]: e.target.value }) : patch(el.id, { text: e.target.value, label: e.target.value || "글자" }))} />
                   </label>
+                  <div className="text-xs font-semibold text-mute">
+                    글꼴
+                    <div className="mt-1 grid max-h-[188px] grid-cols-1 gap-1 overflow-y-auto pr-1">
+                      {FAMILIES.map((fam) => {
+                        const on = familyOf(el.font).id === fam.id;
+                        return (
+                          <button key={fam.id} type="button" aria-pressed={on} onClick={() => patch(el.id, { font: fam.id === "pretendard" ? undefined : fam.id, weight: resolveWeight(fam, el.weight) })} className={cn("flex items-baseline justify-between gap-2 rounded-lg border-2 px-2.5 py-1.5 text-left", on ? "border-brand bg-brand-soft" : "border-line hover:border-brand/50")}>
+                            <span className="truncate text-[15px] text-ink" style={{ fontFamily: cssFamily(fam.id), fontWeight: resolveWeight(fam, 600) }}>{fam.name}</span>
+                            <span className="shrink-0 text-[10px] font-normal text-mute">{fam.kind}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Num label="크기 (pt)" value={el.size} step={0.5} min={4} max={80} onChange={(size) => patch(el.id, { size: Math.min(80, Math.max(4, size)) })} />
                     <label className="block text-xs font-semibold text-mute">
                       굵기
-                      <select className={cn(num, "mt-0.5 text-ink")} value={el.weight} onChange={(e) => patch(el.id, { weight: Number(e.target.value) as Weight })}>
-                        {WEIGHTS.map((w) => <option key={w.value} value={w.value}>{w.name}</option>)}
+                      <select className={cn(num, "mt-0.5 text-ink")} value={resolveWeight(familyOf(el.font), el.weight)} disabled={Object.keys(familyOf(el.font).files).length < 2} onChange={(e) => patch(el.id, { weight: Number(e.target.value) as Weight })}>
+                        {WEIGHTS.filter((w) => familyOf(el.font).files[w.value]).map((w) => <option key={w.value} value={w.value}>{w.name}</option>)}
                       </select>
                     </label>
                   </div>

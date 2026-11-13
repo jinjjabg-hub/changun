@@ -1,3 +1,4 @@
+import { isFamily } from "./fonts";
 import { INDUSTRIES, paletteById } from "./palettes";
 import { TEMPLATES, type Template } from "./templates";
 import { CARD, type CardInfo, type Design, type El, type Side } from "./types";
@@ -64,7 +65,7 @@ export function sanitizeSide(side: Side): Side {
   for (const el of side.elements) {
     switch (el.type) {
       case "text":
-        elements.push({ ...el, x: X(el.x), y: Y(el.y), size: clamp(el.size, 4, 80), color: color(el.color, "#111111"), tracking: el.tracking === undefined ? undefined : clamp(el.tracking, -0.05, 0.6) });
+        elements.push({ ...el, font: isFamily(el.font) ? el.font : undefined, x: X(el.x), y: Y(el.y), size: clamp(el.size, 4, 80), color: color(el.color, "#111111"), tracking: el.tracking === undefined ? undefined : clamp(el.tracking, -0.05, 0.6) });
         break;
       case "rect":
         elements.push({ ...el, x: X(el.x), y: Y(el.y), w: clamp(el.w, 0.1, CARD.w + B * 2), h: clamp(el.h, 0.1, CARD.h + B * 2), fill: color(el.fill, "#111111") });

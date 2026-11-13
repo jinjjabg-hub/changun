@@ -25,7 +25,7 @@ export interface Template {
   build: (ctx: TemplateCtx) => { front: Side; back: Side };
 }
 
-type TextOpts = { size: number; weight?: Weight; color: string; align?: Align; tracking?: number; upper?: boolean; maxW?: number; prefix?: string; label?: string };
+type TextOpts = { size: number; weight?: Weight; color: string; align?: Align; tracking?: number; upper?: boolean; maxW?: number; prefix?: string; label?: string; font?: string };
 
 /** 바탕 위에서 잘 읽히는 색: 명암 대비가 부족하면 대체 색을 쓴다 */
 function readable(fg: string, bg: string, alt: string, min = 2.6) {
@@ -59,6 +59,7 @@ class Builder {
   field(f: Field, x: number, y: number, o: TextOpts) {
     if (!this.has(f)) return false;
     const el: TextEl = { id: this.id(f), type: "text", label: o.label ?? LABELS[f], bind: f, x, y, size: o.size, weight: o.weight ?? 400, color: o.color, align: o.align ?? "left" };
+    if (o.font) el.font = o.font;
     if (o.tracking) el.tracking = o.tracking;
     if (o.upper) el.upper = true;
     if (o.maxW) el.maxW = o.maxW;
@@ -68,6 +69,7 @@ class Builder {
   }
   text(text: string, x: number, y: number, o: TextOpts) {
     const el: TextEl = { id: this.id("text"), type: "text", label: o.label ?? text, text, x, y, size: o.size, weight: o.weight ?? 400, color: o.color, align: o.align ?? "left" };
+    if (o.font) el.font = o.font;
     if (o.tracking) el.tracking = o.tracking;
     if (o.upper) el.upper = true;
     if (o.maxW) el.maxW = o.maxW;
@@ -106,6 +108,7 @@ class Builder {
     const f: Field = this.has("company") ? "company" : "name";
     if (!this.has(f)) return false;
     const el: TextEl = { id: this.id("initial"), type: "text", label: "머리글자", bind: f, initial: true, x, y, size: o.size, weight: o.weight ?? 800, color: o.color, align: o.align ?? "left" };
+    if (o.font) el.font = o.font;
     this.els.push(el);
     return true;
   }
@@ -155,13 +158,13 @@ function brandBack(b: Builder, fg: string, sub: string, accent: string, qrColor:
 /* ───────── 뒷면 구성 (템플릿마다 다르게 쓴다) ───────── */
 
 /** 큰 머리글자 + 회사명 */
-function backMonogram(b: Builder, fg: string, accent: string, sub: string) {
+function backMonogram(b: Builder, fg: string, accent: string, sub: string, font?: string) {
   if (b.info.logo) {
     b.brand(45, 26, { size: 13, weight: 800, color: fg, align: "center", logoH: 14 });
   } else {
-    b.initial(45, 29, { size: 54, weight: 800, color: accent, align: "center" });
+    b.initial(45, 29, { size: 54, weight: 800, color: accent, align: "center", font });
   }
-  b.field("company", 45, 38.5, { size: 7.5, weight: 600, color: fg, align: "center", tracking: 0.25, upper: true, maxW: 70 });
+  b.field("company", 45, 38.5, { size: 7.5, weight: 600, color: fg, align: "center", tracking: 0.25, upper: true, maxW: 70, font });
   b.field("website", 45, 43.5, { size: 5.8, color: sub, align: "center", maxW: 70 });
 }
 
@@ -251,13 +254,13 @@ export const TEMPLATES: Template[] = [
       const acc = readable(pal.accent, pal.dark, pal.onDark);
       const f = new Builder("f", info);
       f.rect(4.5, 4.5, 81, 41, "none", { stroke: acc, strokeWidth: 0.25, label: "테두리" });
-      f.field("name", 45, 21, { size: 15, weight: 600, color: pal.onDark, align: "center", tracking: 0.12, maxW: 66 });
+      f.field("name", 45, 21, { font: "myeongjo", size: 15, weight: 600, color: pal.onDark, align: "center", tracking: 0.12, maxW: 66 });
       f.field("title", 45, 27, { size: 6.8, color: acc, align: "center", tracking: 0.2, upper: true, maxW: 66 });
       f.line(41, 31, 49, 31, acc, 0.3);
       f.contacts(45, 36, { size: 6.2, color: pal.onDark, align: "center", gap: 3.4, maxW: 66, fields: ["phone", "email", "website"] });
       const b = new Builder("b", info);
       b.rect(4.5, 4.5, 81, 41, "none", { stroke: acc, strokeWidth: 0.25, label: "테두리" });
-      backMonogram(b, pal.onDark, acc, acc);
+      backMonogram(b, pal.onDark, acc, acc, "myeongjo");
       return sides(f, pal.dark, b, pal.dark);
     },
   },
@@ -286,7 +289,7 @@ export const TEMPLATES: Template[] = [
       const f = new Builder("f", info);
       f.circle(78, 6, 26, pal.accent);
       f.circle(70, 44, 6, pal.ink);
-      f.field("name", 7, 17, { size: 20, weight: 800, color: pal.ink, maxW: 46 });
+      f.field("name", 7, 17, { font: "blackhan", size: 20, weight: 800, color: pal.ink, maxW: 46 });
       f.field("title", 7, 23, { size: 7.5, weight: 600, color: pal.accent, maxW: 46 });
       f.contactsUp(7, 43.5, { size: 6.6, color: pal.sub, maxW: 52, gap: 3.6, fields: ["phone", "email", "website", "address"] });
       const b = new Builder("b", info);
@@ -303,8 +306,8 @@ export const TEMPLATES: Template[] = [
       f.circle(45, 11, 2.2, pal.accent);
       f.circle(41, 12.5, 1.3, pal.sub);
       f.circle(49, 12.5, 1.3, pal.sub);
-      f.field("name", 45, 24, { size: 14, weight: 300, color: pal.ink, align: "center", tracking: 0.18, maxW: 70 });
-      f.field("title", 45, 29.5, { size: 7, color: pal.sub, align: "center", maxW: 70 });
+      f.field("name", 45, 24, { font: "songmyung", size: 14, weight: 300, color: pal.ink, align: "center", tracking: 0.18, maxW: 70 });
+      f.field("title", 45, 30, { font: "pen", size: 12, color: pal.sub, align: "center", maxW: 70 });
       f.line(42, 33, 48, 33, pal.accent, 0.3);
       f.contacts(45, 38, { size: 6.4, weight: 300, color: pal.ink, align: "center", gap: 3.5, maxW: 74, fields: ["phone", "email", "address"] });
       const b = new Builder("b", info);
@@ -363,8 +366,8 @@ export const TEMPLATES: Template[] = [
       f.line(7, 8.6, 83, 8.6, pal.accent, 0.15);
       f.line(7, 41.4, 83, 41.4, pal.accent, 0.15);
       f.line(7, 42.5, 83, 42.5, pal.accent, 0.5);
-      f.brand(45, 15.5, { size: 7.5, weight: 600, color: pal.accent, align: "center", tracking: 0.15, upper: true, maxW: 70, logoH: 6 });
-      f.field("name", 45, 25, { size: 14, weight: 600, color: pal.ink, align: "center", tracking: 0.1, maxW: 70 });
+      f.brand(45, 15.5, { font: "myeongjo", size: 7.5, weight: 600, color: pal.accent, align: "center", tracking: 0.15, upper: true, maxW: 70, logoH: 6 });
+      f.field("name", 45, 25, { font: "myeongjo", size: 14, weight: 600, color: pal.ink, align: "center", tracking: 0.1, maxW: 70 });
       f.field("title", 45, 30, { size: 7, color: pal.sub, align: "center", maxW: 70 });
       f.contacts(45, 35.5, { size: 6.1, color: pal.ink, align: "center", gap: 3.2, maxW: 74, fields: ["phone", "email"] });
       const b = new Builder("b", info);
@@ -399,10 +402,10 @@ export const TEMPLATES: Template[] = [
     build: ({ info, pal }) => {
       const f = new Builder("f", info);
       f.rect(45, -3, 48, 56, pal.accent, { label: "색면" });
-      f.field("name", 22.5, 24, { size: 12, weight: 300, color: pal.ink, align: "center", tracking: 0.3, upper: true, maxW: 37 });
+      f.field("name", 22.5, 24, { font: "myeongjo", size: 12, weight: 300, color: pal.ink, align: "center", tracking: 0.3, upper: true, maxW: 37 });
       f.line(19.5, 27.5, 25.5, 27.5, pal.accent, 0.3);
       f.field("title", 22.5, 32, { size: 6.2, color: pal.sub, align: "center", tracking: 0.15, maxW: 37 });
-      f.brand(67.5, 14, { size: 7.5, weight: 600, color: "#ffffff", align: "center", tracking: 0.2, upper: true, maxW: 38, logoH: 7 });
+      f.brand(67.5, 14, { font: "myeongjo", size: 7.5, weight: 600, color: "#ffffff", align: "center", tracking: 0.2, upper: true, maxW: 38, logoH: 7 });
       f.contactsUp(67.5, 42, { size: 6, color: "#ffffff", align: "center", gap: 3.4, maxW: 38, fields: ["phone", "email", "sns", "address"] });
       const b = new Builder("b", info);
       b.rect(-3, -3, 12, 56, pal.accent, { label: "색면" });
@@ -421,7 +424,7 @@ export const TEMPLATES: Template[] = [
       f.circle(84, 46, 12, pal.accent);
       const hasPhoto = f.photo(8, 13, 20);
       const x = hasPhoto ? 34 : 30;
-      f.field("name", x, 20, { size: 15, weight: 800, color: pal.ink, maxW: 83 - x });
+      f.field("name", x, 20, { font: "dohyeon", size: 15, weight: 800, color: pal.ink, maxW: 83 - x });
       f.field("title", x, 25.5, { size: 7.2, weight: 600, color: pal.accent, maxW: 83 - x });
       f.field("specialty", x, 30, { size: 6.5, color: pal.sub, maxW: 83 - x });
       f.contactsUp(x, 43.5, { size: 6.4, color: pal.sub, gap: 3.4, maxW: 40, fields: ["phone", "email", "website"] });
@@ -462,12 +465,12 @@ export const TEMPLATES: Template[] = [
       const f = new Builder("f", info);
       f.rect(-3, -3, 37, 56, pal.dark, { label: "왼쪽 면" });
       if (info.logo) f.brand(15.5, 28, { size: 12, color: pal.onDark, align: "center", logoH: 14 });
-      else f.initial(15.5, 33, { size: 52, weight: 800, color: acc, align: "center" });
-      f.field("name", 41, 19, { size: 14.5, weight: 600, color: pal.ink, maxW: 43 });
+      else f.initial(15.5, 33, { font: "myeongjo", size: 52, weight: 800, color: acc, align: "center" });
+      f.field("name", 41, 19, { font: "myeongjo", size: 14.5, weight: 600, color: pal.ink, maxW: 43 });
       f.field("title", 41, 24.5, { size: 6.8, color: pal.accent, weight: 600, tracking: 0.08, maxW: 43 });
       f.contactsUp(41, 43.5, { size: 6.2, color: pal.sub, gap: 3.4, maxW: 43, fields: ["phone", "email", "website"] });
       const b = new Builder("b", info);
-      backMonogram(b, pal.onDark, acc, acc);
+      backMonogram(b, pal.onDark, acc, acc, "myeongjo");
       return sides(f, pal.paper, b, pal.dark);
     },
   },
@@ -477,7 +480,7 @@ export const TEMPLATES: Template[] = [
     build: ({ info, pal }) => {
       const f = new Builder("f", info);
       f.rect(-3, -3, 96, 32, pal.accent, { label: "상단 띠" });
-      f.field("name", 7, 17, { size: 18, weight: 800, color: "#ffffff", maxW: 54 });
+      f.field("name", 7, 17, { font: "blackhan", size: 18, weight: 800, color: "#ffffff", maxW: 54 });
       f.field("title", 7, 23.5, { size: 7, weight: 600, color: "#ffffff", maxW: 54 });
       f.brand(83, 11, { size: 7.5, weight: 800, color: "#ffffff", align: "right", maxW: 30, logoH: 7 });
       f.field("phone", 7, 37.5, { size: 6.4, weight: 600, color: pal.ink, maxW: 38 });
@@ -497,9 +500,9 @@ export const TEMPLATES: Template[] = [
       f.circle(22, 25, 16, pal.accent);
       f.circle(22, 25, 13.5, "none", { stroke: "#ffffff", strokeWidth: 0.3 });
       if (info.logo) f.brand(22, 27, { size: 10, color: "#ffffff", align: "center", logoH: 12 });
-      else f.initial(22, 31.5, { size: 34, weight: 800, color: "#ffffff", align: "center" });
-      f.field("company", 45, 15, { size: 7, weight: 600, color: pal.accent, tracking: 0.12, maxW: 39 });
-      f.field("name", 45, 25, { size: 14, weight: 800, color: pal.ink, maxW: 39 });
+      else f.initial(22, 31.5, { font: "jua", size: 34, weight: 800, color: "#ffffff", align: "center" });
+      f.field("company", 45, 15, { font: "pen", size: 12.5, weight: 400, color: pal.accent, maxW: 39 });
+      f.field("name", 45, 25, { font: "jua", size: 14, weight: 800, color: pal.ink, maxW: 39 });
       f.field("title", 45, 30, { size: 6.6, color: pal.sub, maxW: 39 });
       f.contactsUp(45, 43.5, { size: 6, color: pal.sub, gap: 3.3, maxW: 39, fields: ["phone", "sns", "address"] });
       const b = new Builder("b", info);
@@ -513,7 +516,7 @@ export const TEMPLATES: Template[] = [
     build: ({ info, pal }) => {
       const f = new Builder("f", info);
       f.field("title", 7, 11, { size: 6.4, weight: 600, color: pal.accent, tracking: 0.2, upper: true, maxW: 76 });
-      f.field("name", 6.5, 27, { size: 30, weight: 800, color: pal.ink, maxW: 77 });
+      f.field("name", 6.5, 27, { font: "blackhan", size: 30, weight: 800, color: pal.ink, maxW: 77 });
       f.line(7, 32.5, 83, 32.5, pal.ink, 0.25);
       f.field("phone", 7, 38, { size: 6, color: pal.ink, maxW: 36 });
       f.field("email", 7, 42.5, { size: 6, color: pal.ink, maxW: 36 });
@@ -557,8 +560,8 @@ export const TEMPLATES: Template[] = [
         f.line(x, y, x + k * dx, y, pal.accent, 0.4);
         f.line(x, y, x, y + k * dy, pal.accent, 0.4);
       }
-      f.brand(45, 15, { size: 6.6, weight: 600, color: pal.sub, align: "center", tracking: 0.25, upper: true, maxW: 66, logoH: 6 });
-      f.field("name", 45, 26, { size: 15, weight: 600, color: pal.ink, align: "center", tracking: 0.15, maxW: 66 });
+      f.brand(45, 15, { font: "myeongjo", size: 6.6, weight: 600, color: pal.sub, align: "center", tracking: 0.25, upper: true, maxW: 66, logoH: 6 });
+      f.field("name", 45, 26, { font: "myeongjo", size: 15, weight: 600, color: pal.ink, align: "center", tracking: 0.15, maxW: 66 });
       f.field("title", 45, 31.5, { size: 6.8, color: pal.accent, align: "center", maxW: 66 });
       f.field("phone", 45, 38, { size: 6, color: pal.ink, align: "center", maxW: 66 });
       f.field("email", 45, 42, { size: 6, color: pal.sub, align: "center", maxW: 66 });
@@ -567,7 +570,7 @@ export const TEMPLATES: Template[] = [
         b.line(x, y, x + k * dx, y, acc, 0.4);
         b.line(x, y, x, y + k * dy, acc, 0.4);
       }
-      backMonogram(b, pal.onDark, acc, pal.onDark);
+      backMonogram(b, pal.onDark, acc, pal.onDark, "myeongjo");
       return sides(f, pal.paper, b, pal.dark);
     },
   },
@@ -577,7 +580,7 @@ export const TEMPLATES: Template[] = [
     build: ({ info, pal }) => {
       const f = new Builder("f", info);
       f.rect(-3, -3, 38, 56, pal.accent, { label: "사진 바탕" });
-      if (!f.photo(4, 9, 27, true)) f.initial(17.5, 31, { size: 44, weight: 800, color: "#ffffff", align: "center" });
+      if (!f.photo(4, 9, 27, true)) f.initial(17.5, 31, { font: "jua", size: 44, weight: 800, color: "#ffffff", align: "center" });
       f.field("name", 41, 17, { size: 15, weight: 800, color: pal.ink, maxW: 43 });
       f.field("title", 41, 22.5, { size: 6.8, weight: 600, color: pal.accent, maxW: 43 });
       f.field("specialty", 41, 27, { size: 6.2, color: pal.sub, maxW: 43 });
@@ -594,8 +597,8 @@ export const TEMPLATES: Template[] = [
       const f = new Builder("f", info);
       const cols = [pal.accent, pal.dark, pal.sub, pal.accent, pal.dark];
       cols.forEach((c, i) => f.rect(-3 + i * 19.2, 41, 19.2, 12, c, { label: `줄무늬 ${i + 1}` }));
-      f.brand(7, 11, { size: 7.5, weight: 800, color: pal.accent, maxW: 45, logoH: 7 });
-      f.field("name", 7, 23, { size: 16, weight: 800, color: pal.ink, maxW: 46 });
+      f.brand(7, 11, { font: "dohyeon", size: 7.5, weight: 800, color: pal.accent, maxW: 45, logoH: 7 });
+      f.field("name", 7, 23, { font: "dohyeon", size: 16, weight: 800, color: pal.ink, maxW: 46 });
       f.field("title", 7, 28.5, { size: 6.8, color: pal.sub, maxW: 46 });
       f.contacts(83, 16, { size: 6, color: pal.ink, align: "right", gap: 3.6, maxW: 34, fields: ["phone", "email", "website", "sns"] });
       const b = new Builder("b", info);
