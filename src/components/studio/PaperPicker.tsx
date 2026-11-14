@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Check, ChevronDown } from "lucide-react";
 import { getProduct, type Paper } from "@/data/catalog";
 import type { FontSet } from "@/studio/fonts";
-import type { CardInfo, Side } from "@/studio/types";
+import { cardSize, type CardInfo, type CardSize, type Side } from "@/studio/types";
 import { DEFAULT_FEEL, MaterialChip, MaterialPreview, Surface, thickness } from "@/components/product/MaterialSwatch";
 import { cn } from "@/lib/utils";
 import { CardSvg } from "./CardSvg";
@@ -19,20 +19,20 @@ export const paperById = (id: string | undefined) => CARD_PAPERS.find((p) => p.i
  * 잉크는 종이 위에 "곱하기"로 얹히므로, 흰 부분은 종이색이 되고 종이 결이 비쳐 보인다
  * (크라프트에서 흰색이 사라지고, 검은 종이에서 일반 잉크가 거의 안 보이는 것도 그대로 드러난다).
  */
-export function CardOnPaper({ side, info, fonts, paper, className }: { side: Side; info: CardInfo; fonts: FontSet | null; paper: Paper; className?: string }) {
+export function CardOnPaper({ side, info, fonts, paper, className, size = cardSize("landscape") }: { side: Side; info: CardInfo; fonts: FontSet | null; paper: Paper; className?: string; size?: CardSize }) {
   const id = useId().replace(/:/g, "");
   const feel = paper.feel ?? DEFAULT_FEEL;
   const thick = thickness(paper);
   const glossOpacity = [0, 0.22, 0.5][feel.gloss];
   return (
     <div className={className}>
-      <div className="relative" style={{ aspectRatio: "90 / 50", filter: `drop-shadow(0 ${1 + thick}px ${2 + thick * 2}px rgba(0,0,0,.22))` }}>
+      <div className="relative" style={{ aspectRatio: `${size.w} / ${size.h}`, filter: `drop-shadow(0 ${1 + thick}px ${2 + thick * 2}px rgba(0,0,0,.22))` }}>
         <div className="absolute inset-0 overflow-hidden rounded-[3px]">
           <svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 size-full" aria-hidden>
             <Surface feel={{ ...feel, gloss: 0 }} id={id} />
           </svg>
           <div className="absolute inset-0" style={{ mixBlendMode: "multiply" }}>
-            <CardSvg side={side} info={info} fonts={fonts} className="block size-full" />
+            <CardSvg side={side} info={info} fonts={fonts} size={size} className="block size-full" />
           </div>
           {glossOpacity > 0 && (
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 size-full" aria-hidden>

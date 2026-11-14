@@ -2,7 +2,7 @@ import type { Paper } from "@/data/catalog";
 import { familyOf, fontNeeds, type FontSet } from "./fonts";
 import { boxOf, layoutText } from "./geometry";
 import { qrPath } from "./qr";
-import { CARD, PT_MM, type CardInfo, type Design, type SideKey } from "./types";
+import { PT_MM, cardSize, type CardInfo, type Design, type SideKey } from "./types";
 
 export type Level = "pass" | "warn" | "fail";
 
@@ -34,6 +34,7 @@ const contrast = (a: string, b: string) => {
 /** 인쇄 전 자동 검사. 결과는 통과 / 경고 / 실패로 나눈다. */
 export function preflight(design: Design, info: CardInfo, fonts: FontSet | null, paper?: Paper | null): Check[] {
   const out: Check[] = [];
+  const CARD = cardSize(design.orientation);
   const S = CARD.safe;
 
   out.push({ id: "size", level: "pass", title: "문서 크기", detail: `재단 ${CARD.w}×${CARD.h}mm, 도련 포함 작업 크기 ${CARD.w + CARD.bleed * 2}×${CARD.h + CARD.bleed * 2}mm` });

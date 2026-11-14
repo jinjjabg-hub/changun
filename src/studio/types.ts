@@ -1,6 +1,19 @@
-/** CARD STUDIO — 명함 디자인 데이터 구조. 모든 좌표는 재단 크기(90×50mm) 기준 mm, 글자 크기는 pt. */
+/** CARD STUDIO — 명함 디자인 데이터 구조. 모든 좌표는 재단 크기 기준 mm(가로형 90×50, 세로형 50×90), 글자 크기는 pt. */
 
+export type Orientation = "landscape" | "portrait";
+
+/** 가로형 기준값 (도련·안전 영역은 방향과 상관없이 같다) */
 export const CARD = { w: 90, h: 50, bleed: 3, safe: 3 } as const;
+
+export interface CardSize {
+  w: number;
+  h: number;
+  bleed: number;
+  safe: number;
+}
+
+export const cardSize = (o: Orientation | undefined): CardSize =>
+  o === "portrait" ? { w: CARD.h, h: CARD.w, bleed: CARD.bleed, safe: CARD.safe } : { ...CARD };
 export const PT_MM = 25.4 / 72; // 1pt = 0.3528mm
 
 export type Field = "name" | "title" | "company" | "specialty" | "phone" | "email" | "website" | "address" | "sns";
@@ -31,6 +44,8 @@ export interface CardInfo {
   industry: string;
   mood: string;
   color: string;
+  /** 명함 방향 (생략 = 가로형) */
+  orientation?: Orientation;
 }
 
 interface Base {
@@ -151,6 +166,8 @@ export interface Design {
   templateName: string;
   concept: string;
   palette: Palette;
+  /** 생략 = 가로형 */
+  orientation?: Orientation;
   front: Side;
   back: Side;
 }

@@ -7,7 +7,7 @@ import { INDUSTRIES } from "@/studio/palettes";
 import { buildDesign, planDesigns } from "@/studio/planner";
 import { clearSaved, loadSaved, save } from "@/studio/store";
 import { TEMPLATES } from "@/studio/templates";
-import { emptyInfo, type CardInfo, type Design, type SideKey } from "@/studio/types";
+import { cardSize, emptyInfo, type CardInfo, type Design, type Orientation, type SideKey } from "@/studio/types";
 import { cn } from "@/lib/utils";
 import { CardSvg } from "./CardSvg";
 import { Editor } from "./Editor";
@@ -20,9 +20,25 @@ const STEPS = ["정보 입력", "시안 선택", "편집", "검사 · 내려받�
 
 /** 정보 입력 중에 보여줄 미리보기: 업종에 가장 잘 맞는 템플릿 */
 function previewDesign(info: CardInfo): Design {
-  const t = TEMPLATES.find((x) => x.industries[0] === info.industry) ?? TEMPLATES[0];
+  const o = info.orientation ?? "landscape";
+  const pool = TEMPLATES.filter((x) => (x.orientation ?? "landscape") === o);
+  const t = pool.find((x) => x.industries[0] === info.industry) ?? pool.find((x) => x.industries.includes(info.industry)) ?? pool[0];
   const pal = info.color !== "auto" ? info.color : (INDUSTRIES.find((i) => i.id === info.industry)?.palettes[0] ?? "navy");
   return buildDesign(t.id, pal, info, "preview")!;
+}
+
+/** 가로형 / 세로형 */
+function OrientationToggle({ value, onChange }: { value: Orientation | undefined; onChange: (o: Orientation) => void }) {
+  const cur = value ?? "landscape";
+  return (
+    <div className="inline-flex rounded-lg border-2 border-line bg-white p-0.5" role="group" aria-label="명함 방향">
+      {([["landscape", "가로형", "h-3 w-5"], ["portrait", "세로형", "h-5 w-3"]] as const).map(([v, t, icon]) => (
+        <button key={v} type="button" aria-pressed={cur === v} onClick={() => onChange(v)} className={cn("flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold", cur === v ? "bg-brand text-white" : "hover:bg-brand-soft")}>
+          <i className={cn("inline-block rounded-[2px] border-[1.5px] border-current", icon)} />{t}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function Studio() {
@@ -32,8 +48,8 @@ function Studio() {
   const [step, setStep] = useState(saved?.step ?? 0);
   const [sub, setSub] = useState(0);
   // 시안 번호는 업종·분위기·색 취향별로 센다. 취향을 바꾸면 가장 잘 맞는 시안부터 다시 보여준다
-  const tasteKey = `${info.industry}|${info.mood}|${info.color}`;
-  const [seedFor, setSeedFor] = useState<{ key: string; n: number }>(() => ({ key: saved ? `${saved.info.industry}|${saved.info.mood}|${saved.info.color}` : "", n: saved?.seed ?? 1 }));
+  const tasteKey = `${info.industry}|${info.mood}|${info.color}|${info.orientation ?? "landscape"}`;
+  const [seedFor, setSeedFor] = useState<{ key: string; n: number }>(() => ({ key: saved ? `${saved.info.industry}|${saved.info.mood}|${saved.info.color}|${saved.info.orientation ?? "landscape"}` : "", n: saved?.seed ?? 1 }));
   const seed = seedFor.key === tasteKey ? seedFor.n : 1;
   const setSeed = (f: (n: number) => number) => setSeedFor({ key: tasteKey, n: f(seed) });
   const [design, setDesign] = useState<Design | null>(saved?.design ?? null);
@@ -82,6 +98,7 @@ function Studio() {
   };
 
   const preview = step === 0 ? previewDesign(info) : null;
+  const portrait = (info.orientation ?? "landscape") === "portrait";
 
   return (
     <div className="mx-auto max-w-[1180px] px-4 py-8">
@@ -112,10 +129,13 @@ function Studio() {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
           <div className="order-2 lg:order-1"><InfoForm info={info} onChange={setInfo} sub={sub} onSub={setSub} onDone={() => go(1)} /></div>
           <aside className="order-1 lg:sticky lg:top-[150px] lg:order-2 lg:self-start">
-            <p className="mb-2 text-xs font-bold text-mute">입력하는 대로 바뀌는 미리보기</p>
-            <div className="space-y-3 rounded-2xl bg-surface p-4">
-              <CardSvg side={preview.front} info={info} fonts={fonts} className="w-full rounded-[3px] shadow-md" />
-              <CardSvg side={preview.back} info={info} fonts={fonts} className="w-full rounded-[3px] shadow-md" />
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-bold text-mute">입력하는 대로 바뀌는 미리보기</p>
+              <OrientationToggle value={info.orientation} onChange={(orientation) => setInfo({ ...info, orientation })} />
+            </div>
+            <div className={cn("gap-3 rounded-2xl bg-surface p-4", portrait ? "mx-auto grid max-w-[340px] grid-cols-2" : "space-y-3")}>
+              <CardSvg side={preview.front} info={info} fonts={fonts} size={cardSize(preview.orientation)} className="w-full rounded-[3px] shadow-md" />
+              <CardSvg side={preview.back} info={info} fonts={fonts} size={cardSize(preview.orientation)} className="w-full rounded-[3px] shadow-md" />
             </div>
             <p className="mt-2 text-xs text-mute">비워 둔 항목은 명함에서 자동으로 빠져요. 다음 단계에서 서로 다른 시안 4종을 보여 드려요.</p>
           </aside>
@@ -126,15 +146,16 @@ function Studio() {
         <div>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-mute">업종과 취향에 맞춰 서로 다른 레이아웃 4종을 골랐어요. 마음에 드는 시안을 눌러 편집을 시작하세요.{design && " 새 시안을 고르면 지금까지 편집한 내용은 바뀝니다."}</p>
+            <OrientationToggle value={info.orientation} onChange={(orientation) => setInfo({ ...info, orientation })} />
             <button type="button" onClick={() => setSeed((s) => s + 1)} className="flex h-10 items-center gap-1.5 rounded-lg border-2 border-line px-3 text-sm font-bold hover:border-brand/50"><RefreshCw size={15} /> 다른 시안 보기</button>
           </div>
           <ul className="grid gap-5 md:grid-cols-2">
             {options.map((d, i) => (
               <li key={d.id}>
                 <button type="button" onClick={() => { setDesign(d); setFocus(null); setStep(2); window.scrollTo({ top: 0 }); }} className="group w-full rounded-2xl border-2 border-line bg-surface p-4 text-left transition-colors hover:border-brand">
-                  <div className="grid grid-cols-2 gap-3">
-                    <CardSvg side={d.front} info={info} fonts={fonts} watermark className="w-full rounded-[3px] shadow-md" />
-                    <CardSvg side={d.back} info={info} fonts={fonts} watermark className="w-full rounded-[3px] shadow-md" />
+                  <div className={cn("mx-auto grid grid-cols-2 gap-3", d.orientation === "portrait" && "max-w-[300px]")}>
+                    <CardSvg side={d.front} info={info} fonts={fonts} size={cardSize(d.orientation)} watermark className="w-full rounded-[3px] shadow-md" />
+                    <CardSvg side={d.back} info={info} fonts={fonts} size={cardSize(d.orientation)} watermark className="w-full rounded-[3px] shadow-md" />
                   </div>
                   <p className="mt-3 flex items-center justify-between font-extrabold">
                     <span>시안 {i + 1} · {d.templateName} <span className="text-xs font-normal text-mute">· {d.palette.name}</span></span>

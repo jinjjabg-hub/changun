@@ -21,6 +21,8 @@ export interface Template {
   family: "left" | "center" | "band" | "split" | "graphic" | "photo";
   /** 좌우를 뒤집어도 어울리는지 (시안 변형용) */
   mirror?: boolean;
+  /** 명함 방향 (생략 = 가로형) */
+  orientation?: "landscape" | "portrait";
   concept: string;
   build: (ctx: TemplateCtx) => { front: Side; back: Side };
 }
@@ -222,6 +224,43 @@ function backCircles(b: Builder, pal: Palette) {
   b.brand(9, 22, { size: 12, weight: 800, color: pal.ink, maxW: 46, logoH: 11 });
   b.field("specialty", 9, 28.5, { size: 6.6, color: pal.sub, maxW: 46 });
   b.contacts(9, 38, { size: 5.8, color: pal.sub, gap: 3.2, maxW: 46, fields: ["website", "address"] });
+}
+
+/* ───────── 세로형 (50×90mm) 뒷면 ───────── */
+
+/** 가운데 정렬: 브랜드 + 한 줄 소개 + (있으면) QR */
+function pBackCenter(b: Builder, fg: string, sub: string, accent: string) {
+  b.brand(25, 26, { size: 12, weight: 800, color: fg, align: "center", maxW: 40, logoH: 12 });
+  b.field("specialty", 25, 32.5, { size: 6.2, color: sub, align: "center", maxW: 40 });
+  b.line(21, 37, 29, 37, accent, 0.4);
+  b.qr(13, 44, 24, fg);
+  b.field("website", 25, 80, { size: 6, weight: 600, color: fg, align: "center", maxW: 40 });
+}
+
+/** 큰 머리글자 */
+function pBackMonogram(b: Builder, fg: string, accent: string, sub: string, font?: string) {
+  if (b.info.logo) b.brand(25, 46, { size: 12, color: fg, align: "center", logoH: 16 });
+  else b.initial(25, 52, { size: 62, weight: 800, color: accent, align: "center", font });
+  b.field("company", 25, 66, { size: 7, weight: 600, color: fg, align: "center", tracking: 0.2, upper: true, maxW: 40, font });
+  b.field("website", 25, 72, { size: 5.6, color: sub, align: "center", maxW: 40 });
+}
+
+/** 큰 QR + 안내 */
+function pBackQr(b: Builder, fg: string, sub: string, accent: string) {
+  if (!b.qr(10, 18, 30, fg)) return pBackMonogram(b, fg, accent, sub);
+  b.text("휴대폰으로 스캔해", 25, 57, { size: 6.4, color: sub, align: "center", label: "QR 안내 1" });
+  b.text("명함을 저장하세요", 25, 62, { size: 7.4, weight: 600, color: fg, align: "center", label: "QR 안내 2" });
+  b.line(21, 66.5, 29, 66.5, accent, 0.5);
+  b.brand(25, 75, { size: 8.5, weight: 800, color: fg, align: "center", maxW: 40, logoH: 7 });
+  b.field("website", 25, 80.5, { size: 5.6, color: sub, align: "center", maxW: 40 });
+}
+
+/** 점 무늬 + 정보 */
+function pBackDots(b: Builder, dot: string, fg: string, sub: string) {
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 8; c++) b.circle(5 + c * 5.7, 5 + r * 5.4, 0.85, dot);
+  b.brand(6, 52, { size: 12, weight: 800, color: fg, maxW: 38, logoH: 11 });
+  b.field("specialty", 6, 58.5, { size: 6.2, color: sub, maxW: 38 });
+  b.contacts(6, 74, { size: 5.6, color: sub, gap: 3.3, maxW: 38, fields: ["website", "address"] });
 }
 
 const sides = (front: Builder, frontBg: string, back: Builder, backBg: string) => ({
@@ -605,6 +644,140 @@ export const TEMPLATES: Template[] = [
       cols.forEach((c, i) => b.rect(-3 + i * 19.2, -3, 19.2, 8, c, { label: `줄무늬 ${i + 1}` }));
       backBigQr(b, pal.ink, pal.sub, pal.accent);
       return sides(f, pal.paper, b, pal.paper);
+    },
+  },
+  /* ───────── 세로형 (50×90mm) ───────── */
+  {
+    id: "pv-minimal", name: "세로 미니멀", orientation: "portrait", industries: ["professional", "general", "tech", "creative"], moods: ["simple"], family: "left", mirror: true,
+    concept: "세로로 긴 여백을 살려 이름과 연락처만 아래쪽에 단정하게 모았습니다.",
+    build: ({ info, pal }) => {
+      const f = new Builder("f", info);
+      f.brand(6, 12, { size: 7.5, weight: 800, color: pal.ink, maxW: 38, logoH: 7 });
+      f.field("name", 6, 54, { size: 16, weight: 600, color: pal.ink, maxW: 38 });
+      f.field("title", 6, 60, { size: 6.8, color: pal.accent, weight: 600, maxW: 38 });
+      f.line(6, 64.5, 14, 64.5, pal.accent, 0.4);
+      f.contactsUp(6, 84, { size: 5.8, color: pal.sub, gap: 3.3, maxW: 38, fields: ["phone", "email", "website", "address"] });
+      const b = new Builder("b", info);
+      pBackCenter(b, pal.ink, pal.sub, pal.accent);
+      return sides(f, pal.paper, b, pal.paper);
+    },
+  },
+  {
+    id: "pv-classic", name: "세로 클래식", orientation: "portrait", industries: ["finance", "executive", "professional", "medical"], moods: ["premium"], family: "center",
+    concept: "가는 테두리와 명조체, 가운데 정렬로 격식 있게 세웠습니다.",
+    build: ({ info, pal }) => {
+      const acc = readable(pal.accent, pal.dark, pal.onDark);
+      const f = new Builder("f", info);
+      f.rect(4, 4, 42, 82, "none", { stroke: pal.accent, strokeWidth: 0.25, label: "테두리" });
+      f.brand(25, 18, { font: "myeongjo", size: 6.4, weight: 600, color: pal.sub, align: "center", tracking: 0.25, upper: true, maxW: 36, logoH: 7 });
+      f.field("name", 25, 44, { font: "myeongjo", size: 16, weight: 600, color: pal.ink, align: "center", tracking: 0.15, maxW: 36 });
+      f.field("title", 25, 50, { size: 6.6, color: pal.accent, align: "center", maxW: 36 });
+      f.line(21.5, 54.5, 28.5, 54.5, pal.accent, 0.3);
+      f.contacts(25, 66, { size: 5.8, color: pal.ink, align: "center", gap: 3.4, maxW: 38, fields: ["phone", "email", "website"] });
+      const b = new Builder("b", info);
+      b.rect(4, 4, 42, 82, "none", { stroke: acc, strokeWidth: 0.25, label: "테두리" });
+      pBackMonogram(b, pal.onDark, acc, pal.onDark, "myeongjo");
+      return sides(f, pal.paper, b, pal.dark);
+    },
+  },
+  {
+    id: "pv-block", name: "세로 컬러 블록", orientation: "portrait", industries: ["creative", "tech", "corporate", "lifestyle"], moods: ["bold"], family: "band",
+    concept: "위쪽 큰 색면에 머리글자를 크게, 아래에 이름을 굵게 두었습니다.",
+    build: ({ info, pal }) => {
+      const f = new Builder("f", info);
+      f.rect(-3, -3, 56, 42, pal.accent, { label: "상단 색면" });
+      if (info.logo) f.brand(25, 22, { size: 12, color: "#ffffff", align: "center", logoH: 16 });
+      else f.initial(25, 30, { size: 50, weight: 800, color: "#ffffff", align: "center", font: "blackhan" });
+      f.field("name", 6, 53, { font: "blackhan", size: 17, weight: 800, color: pal.ink, maxW: 38 });
+      f.field("title", 6, 59, { size: 6.6, weight: 600, color: pal.accent, maxW: 38 });
+      f.contactsUp(6, 84, { size: 5.8, color: pal.sub, gap: 3.3, maxW: 38, labels: true, fields: ["phone", "email", "website"] });
+      const b = new Builder("b", info);
+      pBackQr(b, pal.ink, pal.sub, pal.accent);
+      return sides(f, pal.paper, b, pal.paper);
+    },
+  },
+  {
+    id: "pv-photo", name: "세로 프로필", orientation: "portrait", industries: ["education", "medical", "beauty", "construction", "general"], moods: ["warm"], family: "photo",
+    concept: "얼굴을 위에 크게 두어 처음 만나도 기억에 남습니다. (사진이 없으면 머리글자)",
+    build: ({ info, pal }) => {
+      const f = new Builder("f", info);
+      f.rect(-3, -3, 56, 25, pal.accent, { label: "상단 색면" });
+      f.circle(25, 24, 13.5, pal.paper);
+      if (!f.photo(13, 12, 24, true)) f.initial(25, 30.5, { size: 30, weight: 800, color: pal.accent, align: "center", font: "jua" });
+      f.field("name", 25, 50, { font: "jua", size: 16, weight: 600, color: pal.ink, align: "center", maxW: 40 });
+      f.field("title", 25, 56, { size: 6.6, weight: 600, color: pal.accent, align: "center", maxW: 40 });
+      f.field("specialty", 25, 61, { size: 5.8, color: pal.sub, align: "center", maxW: 40 });
+      f.contactsUp(25, 84, { size: 5.6, color: pal.sub, align: "center", gap: 3.2, maxW: 42, fields: ["phone", "email", "address"] });
+      const b = new Builder("b", info);
+      pBackCenter(b, pal.ink, pal.sub, pal.accent);
+      return sides(f, pal.paper, b, pal.paper);
+    },
+  },
+  {
+    id: "pv-editorial", name: "세로 에디토리얼", orientation: "portrait", industries: ["creative", "professional", "education", "beauty"], moods: ["bold", "simple"], family: "graphic", mirror: true,
+    concept: "이름을 아주 크게 위에 올리고 나머지는 작게 정리한 잡지 표지 스타일입니다.",
+    build: ({ info, pal }) => {
+      const f = new Builder("f", info);
+      f.field("title", 6, 10, { size: 5.8, weight: 600, color: pal.accent, tracking: 0.2, upper: true, maxW: 38 });
+      f.field("name", 5.5, 28, { font: "blackhan", size: 27, weight: 800, color: pal.ink, maxW: 39 });
+      f.line(6, 34, 44, 34, pal.ink, 0.25);
+      f.field("company", 6, 40, { size: 6.2, weight: 600, color: pal.ink, maxW: 38 });
+      f.contactsUp(6, 84, { size: 5.6, color: pal.sub, gap: 3.2, maxW: 38, fields: ["phone", "email", "website", "sns"] });
+      const b = new Builder("b", info);
+      pBackDots(b, pal.accent, pal.ink, pal.sub);
+      return sides(f, pal.paper, b, pal.paper);
+    },
+  },
+  {
+    id: "pv-side", name: "세로 사이드 띠", orientation: "portrait", industries: ["corporate", "global", "construction", "finance"], moods: ["simple", "premium"], family: "split", mirror: true,
+    concept: "왼쪽 세로 띠로 단단한 기업 느낌을 주고 정보를 오른쪽에 정렬했습니다.",
+    build: ({ info, pal }) => {
+      const f = new Builder("f", info);
+      f.rect(-3, -3, 14, 96, pal.dark, { label: "세로 띠" });
+      f.rect(11, -3, 1.4, 96, pal.accent, { label: "강조 선" });
+      f.brand(17, 13, { size: 7, weight: 800, color: pal.accent, maxW: 28, logoH: 7 });
+      f.field("name", 17, 46, { size: 15, weight: 800, color: pal.ink, maxW: 29 });
+      f.field("title", 17, 52, { size: 6.4, color: pal.sub, maxW: 29 });
+      f.contactsUp(17, 84, { size: 5.4, color: pal.ink, gap: 3.2, maxW: 29, fields: ["phone", "email", "website", "address"] });
+      const b = new Builder("b", info);
+      b.rect(39, -3, 14, 96, pal.dark, { label: "세로 띠" });
+      b.rect(37.6, -3, 1.4, 96, pal.accent, { label: "강조 선" });
+      b.brand(6, 40, { size: 11, weight: 800, color: pal.ink, maxW: 28, logoH: 10 });
+      b.field("specialty", 6, 46.5, { size: 5.8, color: pal.sub, maxW: 28 });
+      b.qr(6, 58, 18, pal.ink);
+      return sides(f, pal.paper, b, pal.paper);
+    },
+  },
+  {
+    id: "pv-circle", name: "세로 서클", orientation: "portrait", industries: ["lifestyle", "creative", "education", "medical"], moods: ["warm", "bold"], family: "graphic",
+    concept: "모서리를 넘는 큰 원이 경쾌한 리듬을 만듭니다.",
+    build: ({ info, pal }) => {
+      const f = new Builder("f", info);
+      f.circle(46, 18, 26, pal.accent);
+      f.circle(41, 80, 4, pal.dark);
+      f.field("name", 6, 54, { font: "dohyeon", size: 18, weight: 600, color: pal.ink, maxW: 38 });
+      f.field("title", 6, 60, { size: 6.6, weight: 600, color: pal.accent, maxW: 38 });
+      f.contacts(6, 67, { size: 5.6, color: pal.sub, gap: 3.2, maxW: 38, fields: ["phone", "email", "sns"] });
+      const b = new Builder("b", info);
+      b.circle(2, 92, 15, pal.accent);
+      pBackCenter(b, pal.ink, pal.sub, pal.accent);
+      return sides(f, pal.paper, b, pal.paper);
+    },
+  },
+  {
+    id: "pv-band", name: "세로 하단 띠", orientation: "portrait", industries: ["general", "construction", "tech", "global", "corporate"], moods: ["bold", "simple"], family: "band",
+    concept: "아래쪽 어두운 띠에 연락처를 모아 위쪽 이름이 돋보입니다.",
+    build: ({ info, pal }) => {
+      const acc = readable(pal.accent, pal.dark, pal.onDark);
+      const f = new Builder("f", info);
+      f.rect(-3, 60, 56, 33, pal.dark, { label: "하단 띠" });
+      f.brand(6, 12, { size: 7.5, weight: 800, color: pal.accent, maxW: 38, logoH: 7 });
+      f.field("name", 6, 40, { size: 19, weight: 800, color: pal.ink, maxW: 38 });
+      f.field("title", 6, 46.5, { size: 6.6, color: pal.sub, maxW: 38 });
+      f.contacts(6, 69, { size: 5.6, color: pal.onDark, gap: 3.4, maxW: 38, labels: true, fields: ["phone", "email", "website", "address"] });
+      const b = new Builder("b", info);
+      pBackMonogram(b, pal.onDark, acc, pal.onDark);
+      return sides(f, pal.paper, b, pal.dark);
     },
   },
 ];

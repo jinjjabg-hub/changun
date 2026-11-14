@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2, FileDown, XCircle } from "lucide-react";
 import { designToPdf, downloadBytes, downloadText, sideToSvg } from "@/studio/exporters";
 import type { FontSet } from "@/studio/fonts";
 import { preflight, summarize, type Check } from "@/studio/preflight";
-import { CARD, type CardInfo, type Design, type SideKey } from "@/studio/types";
+import { CARD, cardSize, type CardInfo, type Design, type SideKey } from "@/studio/types";
 import { cn } from "@/lib/utils";
 import { CardSvg } from "./CardSvg";
 import { CardOnPaper, PaperCompare, PaperPicker, PaperSummary, paperById } from "./PaperPicker";
@@ -39,7 +39,7 @@ export function Finish({ design, info, fonts, paperId, onPaper, onFix }: { desig
   };
   const pdf = (sides: SideKey[], suffix: string) => run(`pdf-${suffix}`, async (f) => downloadBytes(await designToPdf(design, info, f, sides, paper.name), `${base}-${suffix}.pdf`));
   const svg = (side: SideKey, outline: boolean) =>
-    run(`svg-${side}-${outline}`, async (f) => downloadText(await sideToSvg(design[side], info, f, outline), `${base}-${side}${outline ? "-outlined" : "-editable"}.svg`, "image/svg+xml"));
+    run(`svg-${side}-${outline}`, async (f) => downloadText(await sideToSvg(design[side], info, f, outline, cardSize(design.orientation)), `${base}-${side}${outline ? "-outlined" : "-editable"}.svg`, "image/svg+xml"));
 
   const btn = "flex h-10 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40";
   const order: Check["level"][] = ["fail", "warn", "pass"];
@@ -55,13 +55,13 @@ export function Finish({ design, info, fonts, paperId, onPaper, onFix }: { desig
             ))}
           </div>
         </div>
-        <div className={cn("grid gap-4 rounded-2xl p-4 sm:grid-cols-2 sm:p-6", view === "paper" ? "bg-[#e6e8e5]" : "bg-surface")}>
+        <div className={cn("grid grid-cols-2 gap-4 rounded-2xl p-4 sm:p-6", design.orientation !== "portrait" && "max-sm:grid-cols-1", view === "paper" ? "bg-[#e6e8e5]" : "bg-surface")}>
           {(["front", "back"] as SideKey[]).map((k) => (
             <figure key={k}>
               {view === "paper" ? (
-                <CardOnPaper side={design[k]} info={info} fonts={fonts} paper={paper} />
+                <CardOnPaper side={design[k]} info={info} fonts={fonts} paper={paper} size={cardSize(design.orientation)} />
               ) : (
-                <CardSvg side={design[k]} info={info} fonts={fonts} guides className="w-full shadow-lg" />
+                <CardSvg side={design[k]} info={info} fonts={fonts} guides size={cardSize(design.orientation)} className="w-full shadow-lg" />
               )}
               <figcaption className="mt-1.5 text-center text-xs text-mute">{k === "front" ? "앞면" : "뒷면"}{view === "trim" && " · 분홍 실선 재단선, 초록 점선 안전 영역"}</figcaption>
             </figure>
@@ -94,7 +94,7 @@ export function Finish({ design, info, fonts, paperId, onPaper, onFix }: { desig
       <aside className="lg:sticky lg:top-[150px] lg:self-start">
         <div className="rounded-2xl border-2 border-brand p-5">
           <p className="font-extrabold">파일 내려받기</p>
-          <p className="mt-1 text-xs text-mute">재단 {CARD.w}×{CARD.h}mm · 도련 {CARD.bleed}mm · 벡터 · 용지 {paper.name}</p>
+          <p className="mt-1 text-xs text-mute">재단 {cardSize(design.orientation).w}×{cardSize(design.orientation).h}mm · 도련 {CARD.bleed}mm · 벡터 · 용지 {paper.name}</p>
 
           <p className="mb-1.5 mt-4 text-xs font-bold text-mute">인쇄용 PDF (글자 윤곽선 · CMYK 값 · 재단선 표시)</p>
           <div className="grid gap-2">

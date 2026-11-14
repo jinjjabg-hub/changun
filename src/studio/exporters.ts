@@ -3,7 +3,7 @@ import { downloadBytes } from "@/lib/printPdf";
 import { familyOf, fontNeeds, loadFonts, type FontSet } from "./fonts";
 import { layoutText } from "./geometry";
 import { paintSide, type MapFn, type Paint } from "./paint";
-import { CARD, type CardInfo, type Design, type ImageEl, type Side, type SideKey } from "./types";
+import { cardSize, type CardInfo, type CardSize, type Design, type ImageEl, type Side, type SideKey } from "./types";
 
 const PT = 72 / 25.4;
 /** 재단선 표시를 그릴 바깥 여유 (mm) */
@@ -61,7 +61,7 @@ const f = (v: number) => (Math.round(v * 1000) / 1000).toString();
 
 /* ───────────────────────── SVG ───────────────────────── */
 
-const svgOpen = () => {
+const svgOpen = (CARD: CardSize) => {
   const B = CARD.bleed;
   const W = CARD.w + B * 2;
   const H = CARD.h + B * 2;
@@ -82,7 +82,7 @@ const paintToSvg = (p: Paint, images: Map<string, Prepared>) => {
  *  - outline=false: 글자가 <text> 로 남아 일러스트레이터 등에서 고칠 수 있다 (Pretendard 글꼴 필요)
  *  - outline=true : 글자가 윤곽선으로 바뀌어 어디서 열어도 모양이 같다
  */
-export async function sideToSvg(side: Side, info: CardInfo, _fonts: FontSet, outline: boolean): Promise<string> {
+export async function sideToSvg(side: Side, info: CardInfo, _fonts: FontSet, outline: boolean, CARD: CardSize = cardSize("landscape")): Promise<string> {
   const fonts = await loadFonts(fontNeeds([side]));
   const images = await prepareAll(side, info);
   const B = CARD.bleed;
@@ -102,7 +102,7 @@ export async function sideToSvg(side: Side, info: CardInfo, _fonts: FontSet, out
       }
     }
   }
-  return `${svgOpen()}${body}</svg>\n`;
+  return `${svgOpen(CARD)}${body}</svg>\n`;
 }
 
 /* ───────────────────────── PDF ───────────────────────── */
@@ -120,6 +120,7 @@ export function hexToCmyk(hex: string): [number, number, number, number] {
 
 export async function designToPdf(design: Design, info: CardInfo, _fonts: FontSet, sidesToPrint: SideKey[], paperName?: string): Promise<Uint8Array> {
   // 디자인에 쓰인 글꼴을 모두 받은 뒤 윤곽선으로 바꾼다
+  const CARD = cardSize(design.orientation);
   const fonts = await loadFonts(fontNeeds([design.front, design.back]));
   const { PDFDocument, cmyk, pushGraphicsState, popGraphicsState, rectangle, clip, endPath } = await import("pdf-lib");
   const doc = await PDFDocument.create();

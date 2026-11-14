@@ -1,7 +1,7 @@
 import { isFamily } from "./fonts";
 import { INDUSTRIES, paletteById } from "./palettes";
 import { TEMPLATES, type Template } from "./templates";
-import { CARD, type CardInfo, type Design, type El, type Side } from "./types";
+import { CARD, cardSize, type CardInfo, type CardSize, type Design, type El, type Side } from "./types";
 
 /**
  * 디자인 기획 엔진.
@@ -30,7 +30,7 @@ function rng(seed: number) {
 
 function rank(info: CardInfo, seed: number, shown: Set<string> = new Set()): { t: Template; score: number }[] {
   const rand = rng(seed + 1);
-  return TEMPLATES.map((t) => {
+  return TEMPLATES.filter((t) => (t.orientation ?? "landscape") === (info.orientation ?? "landscape")).map((t) => {
     const industry = t.industries.indexOf(info.industry);
     let score = industry === 0 ? 5 : industry > 0 ? 3 : 0;
     // 직전에 보여준 시안은 뒤로 미뤄 "다른 시안 보기"가 실제로 다른 시안을 내놓게 한다
@@ -57,7 +57,7 @@ const HEX = /^#[0-9a-f]{6}$/i;
 const color = (c: string, fallback: string) => (c === "none" || HEX.test(c) ? c : fallback);
 
 /** 좌표·크기·색이 허용 범위를 벗어나면 보정한다. 지원하지 않는 객체는 버린다. */
-export function sanitizeSide(side: Side): Side {
+export function sanitizeSide(side: Side, CARD: CardSize = cardSize("landscape")): Side {
   const B = CARD.bleed;
   const X = (v: number) => clamp(v, -B, CARD.w + B);
   const Y = (v: number) => clamp(v, -B, CARD.h + B);
@@ -91,8 +91,7 @@ export function sanitizeSide(side: Side): Side {
 }
 
 /** 좌우를 뒤집은 면 (같은 템플릿으로 다른 인상의 시안을 만든다) */
-export function mirrorSide(side: Side): Side {
-  const W = CARD.w;
+export function mirrorSide(side: Side, W: number = CARD.w): Side {
   const flipAlign = (a: "left" | "center" | "right") => (a === "left" ? "right" : a === "right" ? "left" : a);
   return {
     bg: side.bg,
@@ -115,8 +114,9 @@ export function buildDesign(templateId: string, paletteId: string, info: CardInf
   if (!t) return null;
   const pal = paletteById(paletteId);
   const { front, back } = t.build({ info, pal });
-  const f = mirror && t.mirror ? mirrorSide(front) : front;
-  return { id, templateId: t.id, templateName: t.name, concept: t.concept, palette: pal, front: sanitizeSide(f), back: sanitizeSide(back) };
+  const size = cardSize(t.orientation);
+  const f = mirror && t.mirror ? mirrorSide(front, size.w) : front;
+  return { id, templateId: t.id, templateName: t.name, concept: t.concept, palette: pal, orientation: t.orientation ?? "landscape", front: sanitizeSide(f, size), back: sanitizeSide(back, size) };
 }
 
 /** 같은 배치 계열이 겹치지 않게 4종을 고른다 (모자라면 순위대로 채움) */

@@ -6,7 +6,7 @@ import { FAMILIES, WEIGHTS, cssFamily, familyOf, resolveWeight, type FontSet } f
 import { boxOf, moved } from "@/studio/geometry";
 import { PALETTES } from "@/studio/palettes";
 import { recolor } from "@/studio/store";
-import { CARD, type Align, type CardInfo, type Design, type El, type SideKey, type Weight } from "@/studio/types";
+import { cardSize, type Align, type CardInfo, type Design, type El, type SideKey, type Weight } from "@/studio/types";
 import { cn } from "@/lib/utils";
 import { CardSvg } from "./CardSvg";
 
@@ -47,6 +47,7 @@ export function Editor({ design, info, fonts, focus, onDesign, onInfo }: {
   const [drag, setDrag] = useState<{ id: string; dx: number; dy: number } | null>(null);
   const [guides, setGuides] = useState(true);
   const svg = useRef<SVGSVGElement>(null);
+  const size = cardSize(design.orientation);
 
   const commit = (next: Design) => {
     setHist((h) => ({ past: [...h.past.slice(-49), design], future: [] }));
@@ -111,10 +112,10 @@ export function Editor({ design, info, fonts, focus, onDesign, onInfo }: {
     const id = `u-${Date.now().toString(36)}`;
     const ink = onDark() ? pal.onDark : pal.ink;
     const created: El =
-      kind === "text" ? { id, type: "text", label: "새 글자", text: "새 글자", x: CARD.w / 2, y: CARD.h / 2, size: 8, weight: 400, color: ink, align: "center" }
-      : kind === "rect" ? { id, type: "rect", label: "사각형", x: 35, y: 20, w: 20, h: 10, fill: pal.accent }
-      : kind === "circle" ? { id, type: "circle", label: "원", cx: 45, cy: 25, r: 6, fill: pal.accent }
-      : { id, type: "line", label: "선", x1: 30, y1: 25, x2: 60, y2: 25, stroke: ink, width: 0.3 };
+      kind === "text" ? { id, type: "text", label: "새 글자", text: "새 글자", x: size.w / 2, y: size.h / 2, size: 8, weight: 400, color: ink, align: "center" }
+      : kind === "rect" ? { id, type: "rect", label: "사각형", x: size.w / 2 - 10, y: size.h / 2 - 5, w: 20, h: 10, fill: pal.accent }
+      : kind === "circle" ? { id, type: "circle", label: "원", cx: size.w / 2, cy: size.h / 2, r: 6, fill: pal.accent }
+      : { id, type: "line", label: "선", x1: size.w / 2 - 12, y1: size.h / 2, x2: size.w / 2 + 12, y2: size.h / 2, stroke: ink, width: 0.3 };
     setElements([...cur.elements, created]);
     setSel(id);
   };
@@ -160,7 +161,7 @@ export function Editor({ design, info, fonts, focus, onDesign, onInfo }: {
           <label className="ml-auto flex items-center gap-1.5 text-xs font-semibold text-mute"><input type="checkbox" checked={guides} onChange={(e) => setGuides(e.target.checked)} className="accent-[#0f5a43]" /> 재단선 · 안전 영역</label>
         </div>
         <div tabIndex={0} aria-label="명함 편집 캔버스. 화살표 키로 이동, Delete로 삭제" className="rounded-2xl bg-[repeating-conic-gradient(#eef1ef_0_25%,#fafbfa_0_50%)] bg-[length:16px_16px] p-4 outline-none ring-brand/40 focus-visible:ring-2 sm:p-8">
-          <CardSvg svgRef={svg} side={shown} info={info} fonts={fonts} guides={guides} selectedId={sel} onElementPointerDown={startDrag} onBackgroundPointerDown={() => setSel(null)} className="mx-auto w-full max-w-[640px] shadow-xl" />
+          <CardSvg svgRef={svg} side={shown} info={info} fonts={fonts} guides={guides} selectedId={sel} onElementPointerDown={startDrag} onBackgroundPointerDown={() => setSel(null)} size={size} className={cn("mx-auto w-full shadow-xl", design.orientation === "portrait" ? "max-w-[300px]" : "max-w-[640px]")} />
         </div>
         <p className="mt-2 text-center text-xs text-mute">객체를 눌러 선택하고 끌어서 옮기세요 · 화살표 키로 0.5mm씩(Shift 2mm) · Delete로 삭제</p>
         <div className="mt-3 flex flex-wrap justify-center gap-2">

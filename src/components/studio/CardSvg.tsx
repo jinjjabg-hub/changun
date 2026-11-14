@@ -3,7 +3,7 @@
 import { cssFamily, type FontSet } from "@/studio/fonts";
 import { boxOf, layoutText } from "@/studio/geometry";
 import { qrPath } from "@/studio/qr";
-import { CARD, type CardInfo, type El, type Side } from "@/studio/types";
+import { CARD, type CardInfo, type CardSize, type El, type Side } from "@/studio/types";
 
 interface Props {
   side: Side;
@@ -17,6 +17,8 @@ interface Props {
   className?: string;
   svgRef?: React.Ref<SVGSVGElement>;
   watermark?: boolean;
+  /** 재단 크기 (생략 = 가로형) */
+  size?: CardSize;
 }
 
 function Element({ el, info, fonts }: { el: El; info: CardInfo; fonts: FontSet | null }) {
@@ -68,14 +70,15 @@ function Element({ el, info, fonts }: { el: El; info: CardInfo; fonts: FontSet |
   }
 }
 
-export function CardSvg({ side, info, fonts, guides, selectedId, onElementPointerDown, onBackgroundPointerDown, className, svgRef, watermark }: Props) {
-  const B = CARD.bleed;
-  const vb = guides ? `${-B} ${-B} ${CARD.w + B * 2} ${CARD.h + B * 2}` : `0 0 ${CARD.w} ${CARD.h}`;
+export function CardSvg({ side, info, fonts, guides, selectedId, onElementPointerDown, onBackgroundPointerDown, className, svgRef, watermark, size = CARD }: Props) {
+  const C = size;
+  const B = C.bleed;
+  const vb = guides ? `${-B} ${-B} ${C.w + B * 2} ${C.h + B * 2}` : `0 0 ${C.w} ${C.h}`;
   const sel = selectedId ? side.elements.find((e) => e.id === selectedId) : null;
   const selBox = sel ? boxOf(sel, info, fonts) : null;
   return (
     <svg ref={svgRef} viewBox={vb} className={className} role="img" aria-label="명함 미리보기" style={{ touchAction: onElementPointerDown ? "none" : undefined }}>
-      <rect x={-B} y={-B} width={CARD.w + B * 2} height={CARD.h + B * 2} fill={side.bg} onPointerDown={onBackgroundPointerDown} />
+      <rect x={-B} y={-B} width={C.w + B * 2} height={C.h + B * 2} fill={side.bg} onPointerDown={onBackgroundPointerDown} />
       {side.elements.map((el) => (
         <g key={el.id} onPointerDown={onElementPointerDown ? (e) => onElementPointerDown(el, e) : undefined} style={onElementPointerDown ? { cursor: "move" } : undefined}>
           {/* 가는 선·작은 글자도 쉽게 잡히도록 투명한 손잡이 영역을 둔다 */}
@@ -84,12 +87,12 @@ export function CardSvg({ side, info, fonts, guides, selectedId, onElementPointe
         </g>
       ))}
       {watermark && (
-        <text x={CARD.w / 2} y={CARD.h / 2 + 3} textAnchor="middle" fontSize={9} fontWeight={800} fill="#000" opacity={0.07} transform={`rotate(-20 ${CARD.w / 2} ${CARD.h / 2})`} pointerEvents="none">PREVIEW</text>
+        <text x={C.w / 2} y={C.h / 2 + 3} textAnchor="middle" fontSize={9} fontWeight={800} fill="#000" opacity={0.07} transform={`rotate(${C.h > C.w ? -60 : -20} ${C.w / 2} ${C.h / 2})`} pointerEvents="none">PREVIEW</text>
       )}
       {guides && (
         <g pointerEvents="none">
-          <rect x={0} y={0} width={CARD.w} height={CARD.h} fill="none" stroke="#e6007e" strokeWidth={0.2} />
-          <rect x={CARD.safe} y={CARD.safe} width={CARD.w - CARD.safe * 2} height={CARD.h - CARD.safe * 2} fill="none" stroke="#00a060" strokeWidth={0.15} strokeDasharray="1 0.8" />
+          <rect x={0} y={0} width={C.w} height={C.h} fill="none" stroke="#e6007e" strokeWidth={0.2} />
+          <rect x={C.safe} y={C.safe} width={C.w - C.safe * 2} height={C.h - C.safe * 2} fill="none" stroke="#00a060" strokeWidth={0.15} strokeDasharray="1 0.8" />
         </g>
       )}
       {selBox && (

@@ -6,7 +6,7 @@ import { CardSvg } from "./CardSvg";
 import { INDUSTRIES } from "@/studio/palettes";
 import { buildDesign } from "@/studio/planner";
 import { TEMPLATES } from "@/studio/templates";
-import { sampleInfo } from "@/studio/types";
+import { cardSize, sampleInfo } from "@/studio/types";
 import { fontNeeds } from "@/studio/fonts";
 
 /** 템플릿 전체를 예시 정보로 한눈에 보여주는 페이지 */
@@ -30,11 +30,11 @@ export function TemplateGallery() {
           const d = designs[n];
           return (
             <li key={t.id} className="rounded-2xl bg-surface p-4">
-              <div className="grid grid-cols-2 gap-3">
-                <CardSvg side={d.front} info={sampleInfo} fonts={fonts} className="w-full rounded-[3px] shadow-md" />
-                <CardSvg side={d.back} info={sampleInfo} fonts={fonts} className="w-full rounded-[3px] shadow-md" />
+              <div className={d.orientation === "portrait" ? "mx-auto grid max-w-[300px] grid-cols-2 gap-3" : "grid grid-cols-2 gap-3"}>
+                <CardSvg side={d.front} info={sampleInfo} fonts={fonts} size={cardSize(d.orientation)} className="w-full rounded-[3px] shadow-md" />
+                <CardSvg side={d.back} info={sampleInfo} fonts={fonts} size={cardSize(d.orientation)} className="w-full rounded-[3px] shadow-md" />
               </div>
-              <p className="mt-3 font-extrabold">{t.name} <span className="text-xs font-normal text-mute">· {d.palette.name}</span></p>
+              <p className="mt-3 font-extrabold">{t.name}{d.orientation === "portrait" && <span className="ml-1.5 rounded bg-brand-soft px-1.5 py-0.5 text-[11px] text-brand">세로형</span>} <span className="text-xs font-normal text-mute">· {d.palette.name}</span></p>
               <p className="text-xs text-mute">{t.concept}</p>
             </li>
           );
