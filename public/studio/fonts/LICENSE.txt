@@ -1,0 +1,12 @@
+CARD STUDIO에 포함된 글꼴은 모두 SIL Open Font License 1.1 로 배포됩니다 (전문: 같은 폴더의 OFL-*.txt).
+https://openfontlicense.org
+
+Pretendard — Copyright (c) 2021 Kil Hyung-jin, with Reserved Font Name Pretendard. https://github.com/orioncactus/pretendard
+Nanum Myeongjo (나눔명조) — Copyright (c) 2010, NHN Corporation. → OFL-nanummyeongjo.txt
+Song Myung (송명) — Copyright 2018 The SongMyung Project Authors. → OFL-songmyung.txt
+Black Han Sans (블랙한산스) — Copyright 2015 The Black Han Sans Project Authors. → OFL-blackhansans.txt
+Do Hyeon (도현) — Copyright 2018 The Do Hyeon Project Authors. → OFL-dohyeon.txt
+Jua (주아) — Copyright 2018 The Jua Project Authors. → OFL-jua.txt
+Nanum Pen Script (나눔손글씨 펜) — Copyright (c) 2010, NHN Corporation. → OFL-nanumpenscript.txt
+
+원본 파일: https://github.com/google/fonts (ofl/ 폴더)
